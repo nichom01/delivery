@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeliverOps — UI Wireframes v2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f2744;
+    --blue: #1a56db;
+    --blue-light: #e8f0fe;
+    --blue-mid: #3b82f6;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --grey-50: #f8fafc;
+    --grey-100: #f1f5f9;
+    --grey-200: #e2e8f0;
+    --grey-300: #cbd5e1;
+    --grey-400: #94a3b8;
+    --grey-500: #64748b;
+    --grey-600: #475569;
+    --grey-700: #334155;
+    --grey-800: #1e293b;
+    --grey-900: #0f172a;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --sidebar-w: 224px;
+    --topbar-h: 52px;
+    --ctx-h: 48px; /* depot context bar */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: #e8edf4; color: var(--grey-800); font-size: 13px; }
+
+  /* ── WIREFRAME NAVIGATOR ── */
+  #navigator {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+    background: #1a1a2e; color: white; height: 40px;
+    display: flex; align-items: center; gap: 4px; padding: 0 12px;
+    overflow-x: auto; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  #navigator .nav-label { font-size: 10px; color: #6b7280; margin-right: 4px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; flex-shrink:0; }
+  .nav-btn {
+    padding: 3px 9px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75); cursor: pointer;
+    font-size: 11px; font-family: var(--font); transition: all .12s; white-space: nowrap; flex-shrink:0;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.16); color: white; }
+  .nav-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+  .nav-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.12); margin: 0 3px; flex-shrink: 0; }
+  .nav-role-tag {
+    margin-left: auto; flex-shrink:0; display:flex; align-items:center; gap:6px; font-size:11px;
+  }
+  .role-pill {
+    padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; cursor:pointer;
+  }
+  .role-pill.admin { background: #7c3aed; color: white; }
+  .role-pill.manager { background: #0891b2; color: white; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding-top: 40px; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ══════════════════════════════
+     CONTEXT BAR — always on top
+  ══════════════════════════════ */
+  .ctx-bar {
+    height: var(--ctx-h);
+    background: white;
+    border-bottom: 2px solid var(--grey-200);
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 0;
+    flex-shrink: 0;
+    position: sticky; top: 40px; z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .ctx-logo {
+    display: flex; align-items: center; gap: 8px;
+    padding-right: 20px; border-right: 1px solid var(--grey-200);
+    margin-right: 20px; flex-shrink:0;
+  }
+  .ctx-logo-mark {
+    width: 26px; height: 26px; background: var(--navy); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: white;
+  }
+  .ctx-logo-text { font-weight: 700; font-size: 14px; color: var(--grey-900); letter-spacing:-.3px; }
+
+  /* DEPOT PICKER */
+  .depot-picker {
+    display: flex; align-items: center; gap: 10px; flex-shrink:0;
+  }
+  .depot-picker-label {
+    font-size: 10px; font-weight: 700; color: var(--grey-400);
+    text-transform: uppercase; letter-spacing: .6px;
+  }
+  .depot-picker-select {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px 5px 12px; border-radius: 6px;
+    border: 1.5px solid var(--blue); background: var(--blue-light);
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--navy);
+    min-width: 200px;
+  }
+  .depot-picker-select .arrow { margin-left:auto; color: var(--blue); font-size:11px; }
+  /* locked version for depot manager */
+  .depot-picker-select.locked {
+    border-color: var(--grey-300); background: var(--grey-50); cursor: default; color: var(--grey-700);
+  }
+  .depot-picker-select.locked .arrow { color: var(--grey-400); }
+  .depot-dot { width:7px; height:7px; border-radius:50%; background: var(--green); flex-shrink:0; }
+
+  /* BREADCRUMB CONTEXT */
+  .ctx-crumb {
+    display: flex; align-items: center; gap: 6px; margin-left: 16px;
+    font-size: 12px; color: var(--grey-500); flex:1;
+  }
+  .ctx-crumb-sep { color: var(--grey-300); }
+  .ctx-crumb-active { color: var(--grey-800); font-weight: 600; }
+
+  /* USER AREA */
+  .ctx-user {
+    margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink:0;
+  }
+  .ctx-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink:0;
+  }
+  .ctx-avatar.admin { background: #7c3aed; }
+  .ctx-avatar.manager { background: var(--blue); }
+  .ctx-user-info { text-align:right; }
+  .ctx-user-name { font-size: 12.5px; font-weight: 600; color: var(--grey-800); }
+  .ctx-user-role { font-size: 10px; color: var(--grey-500); }
+
+  /* ══════════════════════════════
+     APP SHELL
+  ══════════════════════════════ */
+  .app-shell { display: flex; flex: 1; min-height: 0; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--navy); color: white;
+    display: flex; flex-direction: column; flex-shrink: 0;
+    position: sticky; top: calc(40px + var(--ctx-h));
+    height: calc(100vh - 40px - var(--ctx-h));
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 14px 14px 6px;
+    font-size: 9.5px; color: #4b6080; font-weight: 700;
+    letter-spacing: .9px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sidebar-section::after {
+    content:''; flex:1; height:1px; background: rgba(255,255,255,0.07);
+  }
+  /* Section colour coding */
+  .sidebar-section.depot { color: #38bdf8; }
+  .sidebar-section.system { color: #a78bfa; }
+
+  .sidebar-item {
+    display: flex; align-items: center; gap: 9px; padding: 7px 14px;
+    cursor: pointer; border-radius: 5px; margin: 1px 8px;
+    color: #8899aa; font-size: 12.5px; transition: all .12s;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.07); color: #d0dce8; }
+  .sidebar-item.active { background: var(--blue); color: white; }
+  .sidebar-item .icon { width: 17px; text-align: center; font-size: 13px; flex-shrink:0; }
+
+  /* Scope pill on nav items */
+  .scope-pill {
+    margin-left:auto; font-size: 9px; padding: 1px 5px; border-radius: 8px;
+    font-weight: 700; letter-spacing: .3px; flex-shrink:0;
+  }
+  .scope-depot { background: rgba(56,189,248,0.18); color: #38bdf8; }
+  .scope-system { background: rgba(167,139,250,0.18); color: #a78bfa; }
+
+  .sidebar-user {
+    margin-top: auto; padding: 12px 14px; border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sidebar-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink:0;
+  }
+  .sidebar-avatar.admin { background: #7c3aed; }
+  .sidebar-avatar.manager { background: var(--blue); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .page-header {
+    height: var(--topbar-h); background: white; border-bottom: 1px solid var(--grey-200);
+    display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0;
+  }
+  .page-title { font-size: 16px; font-weight: 700; color: var(--grey-900); flex: 1; }
+  .page-sub { font-size: 11.5px; color: var(--grey-500); margin-top: 1px; }
+  .content { flex: 1; padding: 22px; overflow-y: auto; background: var(--grey-50); }
+
+  /* ══════════════════════════════
+     REUSABLE COMPONENTS
+  ══════════════════════════════ */
+  .btn {
+    padding: 7px 14px; border-radius: 5px; font-size: 12.5px; font-family: var(--font);
+    font-weight: 500; cursor: pointer; border: none;
+    display: inline-flex; align-items: center; gap: 6px; transition: all .12s;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: white; color: var(--grey-700); border: 1px solid var(--grey-300); }
+  .btn-secondary:hover { background: var(--grey-50); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-sm { padding: 4px 10px; font-size: 11.5px; }
+
+  .card { background: white; border-radius: 8px; border: 1px solid var(--grey-200); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .card-header { padding: 13px 18px; border-bottom: 1px solid var(--grey-100); display: flex; align-items: center; justify-content: space-between; gap:12px; }
+  .card-title { font-weight: 600; font-size: 13.5px; color: var(--grey-800); white-space:nowrap; }
+  .card-body { padding: 18px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card { background: white; border-radius: 8px; border: 1px solid var(--grey-200); padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .stat-label { font-size: 10.5px; color: var(--grey-500); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; margin-bottom: 5px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--grey-900); line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--grey-500); margin-top: 3px; }
+  .stat-card.blue { border-left: 3px solid var(--blue); }
+  .stat-card.green { border-left: 3px solid var(--green); }
+  .stat-card.amber { border-left: 3px solid var(--amber); }
+  .stat-card.red { border-left: 3px solid var(--red); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10.5px; font-weight: 700; color: var(--grey-500); text-transform: uppercase; letter-spacing: .4px; padding: 9px 14px; border-bottom: 2px solid var(--grey-100); background: var(--grey-50); white-space:nowrap; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--grey-100); font-size: 12.5px; color: var(--grey-700); vertical-align: middle; }
+  tr:hover td { background: #f8fafc; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+  .badge-green { background: var(--green-light); color: #065f46; }
+  .badge-amber { background: var(--amber-light); color: #92400e; }
+  .badge-red { background: var(--red-light); color: #991b1b; }
+  .badge-blue { background: var(--blue-light); color: #1e40af; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-grey { background: var(--grey-100); color: var(--grey-600); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.span2 { grid-column: span 2; }
+  label { font-size: 11px; font-weight: 600; color: var(--grey-600); }
+  input, select, textarea {
+    padding: 7px 10px; border: 1px solid var(--grey-300); border-radius: 5px;
+    font-size: 12.5px; font-family: var(--font); color: var(--grey-800); background: white; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(26,86,219,0.1); }
+  input[disabled], select[disabled] { background: var(--grey-50); color: var(--grey-500); cursor:not-allowed; }
+  textarea { resize: vertical; min-height: 72px; }
+
+  .progress-bar { height: 5px; background: var(--grey-200); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+  .progress-fill.green { background: var(--green); }
+  .progress-fill.blue { background: var(--blue); }
+  .progress-fill.amber { background: var(--amber); }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .flex-row { display: flex; align-items: center; gap: 10px; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .section-gap { margin-bottom: 18px; }
+  .text-muted { color: var(--grey-500); }
+  .text-sm { font-size: 11.5px; }
+  .text-bold { font-weight: 600; }
+  .font-mono { font-family: var(--mono); }
+  .link { color: var(--blue); cursor: pointer; font-size: 12px; }
+  .link:hover { text-decoration: underline; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10.5px; font-family: var(--mono); background: var(--grey-100); color: var(--grey-600); }
+
+  .alert { padding: 9px 13px; border-radius: 6px; font-size: 12px; display: flex; align-items: flex-start; gap: 7px; margin-bottom: 14px; line-height: 1.5; }
+  .alert-amber { background: var(--amber-light); border: 1px solid #fcd34d; color: #92400e; }
+  .alert-blue { background: var(--blue-light); border: 1px solid #93c5fd; color: #1e40af; }
+  .alert-green { background: var(--green-light); border: 1px solid #6ee7b7; color: #065f46; }
+
+  .tabs { display: flex; border-bottom: 2px solid var(--grey-200); margin-bottom: 18px; }
+  .tab { padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--grey-500); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .12s; }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* Postcode hierarchy */
+  .pc-level { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--grey-200); background: white; transition: all .12s; }
+  .pc-level:not(:last-child) { border-bottom: none; }
+  .pc-level:first-child { border-radius: 6px 6px 0 0; }
+  .pc-level:last-child { border-radius: 0 0 6px 6px; }
+  .pc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pc-dot.active { background: var(--green); }
+  .pc-dot.fallback { background: var(--grey-300); }
+  .pc-code { font-family: var(--mono); font-weight: 500; font-size: 12.5px; min-width: 100px; }
+
+  /* Box grid */
+  .box-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 7px; }
+  .box-item { border: 1px solid var(--grey-200); border-radius: 6px; padding: 8px; text-align: center; font-size: 11px; }
+  .box-item.received { border-color: var(--green); background: var(--green-light); }
+  .box-item.missing { border-color: var(--red); background: var(--red-light); }
+  .box-item.pending { border-color: var(--amber); background: var(--amber-light); }
+
+  /* Timeline */
+  .tl-item { display: flex; gap: 11px; padding: 8px 0; position: relative; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .tl-dot.done { background: var(--green); }
+  .tl-dot.current { background: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,0.2); }
+  .tl-dot.pending { background: var(--grey-300); }
+  .tl-line { position: absolute; left: 4px; top: 20px; bottom: -8px; width: 1px; background: var(--grey-200); }
+
+  /* Login */
+  .login-wrap { background: var(--navy); min-height: calc(100vh - 40px); display: flex; align-items: center; justify-content: center; width: 100%; }
+  .login-card { background: white; border-radius: 12px; padding: 38px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+
+  /* ── DEPOT CONTEXT BANNER shown inside screens ── */
+  .depot-scope-banner {
+    display:flex; align-items:center; gap:8px;
+    background: linear-gradient(135deg, #0f2744 0%, #1a3a5c 100%);
+    color: white; padding: 0 24px; height: 36px; font-size: 12px; flex-shrink:0;
+  }
+  .dsb-dot { width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .dsb-label { color: #7ab3d4; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+  .dsb-name { font-weight:700; color:white; }
+  .dsb-scope { margin-left:auto; font-size:10.5px; color: #7ab3d4; }
+</style>
+</head>
+<body>
+
+<!-- WIREFRAME NAVIGATOR -->
+<div id="navigator">
+  <span class="nav-label">Screens:</span>
+  <button class="nav-btn active" onclick="show('login')">Login</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" onclick="show('dashboard')">Dashboard</button>
+  <button class="nav-btn" onclick="show('route-drill')">Route Drilldown</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" onclick="show('order-entry')">Order Entry</button>
+  <button class="nav-btn" onclick="show('goods-receiving')">Goods Receiving</button>
+  <button class="nav-btn" onclick="show('manifest')">Manifest Builder</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" onclick="show('routes')">Routes</button>
+  <button class="nav-btn" onclick="show('postcodes')">Postcode Rules</button>
+  <button class="nav-btn" onclick="show('vehicles')">Vehicles</button>
+  <button class="nav-btn" onclick="show('drivers')">Drivers</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" onclick="show('depots')">Depots</button>
+  <button class="nav-btn" onclick="show('users')">User Mgmt</button>
+  <button class="nav-btn" onclick="show('audit')">Audit Log</button>
+  <div class="nav-role-tag">
+    <span style="color:#6b7280;font-size:10px">Viewing as:</span>
+    <span class="role-pill admin" onclick="setRole('admin')" id="pill-admin">Central Admin</span>
+    <span class="role-pill manager" onclick="setRole('manager')" id="pill-manager" style="opacity:.4">Depot Manager</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SHARED CONTEXT BAR (injected per screen)
+     Two variants: admin (interactive picker) and manager (locked)
+══════════════════════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: LOGIN
+══════════════════════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div style="text-align:center;margin-bottom:26px">
+        <div style="width:46px;height:46px;background:var(--navy);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:white;margin-bottom:10px">D</div>
+        <div style="font-size:20px;font-weight:700;color:var(--grey-900)">DeliverOps</div>
+        <div style="font-size:12px;color:var(--grey-500);margin-top:2px">Delivery Van Management System</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="form-group"><label>Email Address</label><input type="email" value="j.smith@depot-london.co.uk"></div>
+        <div class="form-group"><label>Password</label><input type="password" value="••••••••"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;cursor:pointer"><input type="checkbox" checked> Remember me</label>
+          <span class="link" style="font-size:12px">Forgot password?</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:14px;margin-top:2px" onclick="show('dashboard')">Sign In →</button>
+        <div style="text-align:center;font-size:11px;color:var(--grey-400)">Contact your system administrator if you need access</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: DASHBOARD
+══════════════════════════════════════════════════ -->
+<div id="s-dashboard" class="screen">
+  <!-- CONTEXT BAR -->
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker">
+      <span class="depot-picker-label">Working Depot</span>
+      <div class="depot-picker-select admin-only" id="dp-dashboard">
+        <div class="depot-dot"></div>
+        <span id="dp-dashboard-name">London Central</span>
+        <span class="arrow">▾</span>
+      </div>
+    </div>
+    <div class="ctx-crumb">
+      <span class="ctx-crumb-sep">›</span>
+      <span class="ctx-crumb-active">Dashboard</span>
+    </div>
+    <div class="ctx-user">
+      <div class="ctx-user-info"><div class="ctx-user-name" id="ctx-name-dashboard">Chris Admin</div><div class="ctx-user-role" id="ctx-role-dashboard">Central Admin</div></div>
+      <div class="ctx-avatar admin" id="ctx-av-dashboard">CA</div>
+    </div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item active"><span class="icon">📊</span> Dashboard <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin" id="sb-av-dashboard">CA</div><div><div style="font-size:12px;color:white;font-weight:500" id="sb-name-dashboard">Chris Admin</div><div style="font-size:10px;color:#64748b" id="sb-role-dashboard">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header">
+        <div><div class="page-title">Depot Dashboard</div><div class="page-sub" id="dash-sub">London Central · Live · 12 Mar 2026</div></div>
+        <input type="date" value="2026-03-12" style="font-size:12px;padding:5px 8px">
+        <button class="btn btn-secondary btn-sm">⬇ Export</button>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat-card blue"><div class="stat-label">Total Routes Today</div><div class="stat-value">6</div><div class="stat-sub">All vehicles dispatched</div></div>
+          <div class="stat-card green"><div class="stat-label">Deliveries Complete</div><div class="stat-value">142</div><div class="stat-sub">of 231 total · 61%</div></div>
+          <div class="stat-card green"><div class="stat-label">Boxes Delivered</div><div class="stat-value">687</div><div class="stat-sub">of 1,104 total · 62%</div></div>
+          <div class="stat-card amber"><div class="stat-label">Exceptions</div><div class="stat-value">8</div><div class="stat-sub">Missing boxes · 3 orders</div></div>
+        </div>
+        <div class="card section-gap">
+          <div class="card-header"><span class="card-title">Route Summary — Today</span><span class="text-muted text-sm">Last updated 11:47 · Auto-refreshing</span></div>
+          <table>
+            <thead><tr><th>Route</th><th>Vehicle</th><th>Driver</th><th>Deliveries</th><th>Boxes</th><th style="min-width:140px">Delivery %</th><th>Box %</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b>Route A</b><br><span class="text-muted text-sm">SW zones</span></td><td class="font-mono">LK71 ABC</td><td>J. Patel</td><td>42 / 42</td><td>201 / 201</td><td><div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div><div class="text-sm text-muted" style="margin-top:2px">100%</div></td><td><div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div></td><td><span class="badge badge-green">Complete</span></td><td><span class="link" onclick="show('route-drill')">View →</span></td></tr>
+              <tr><td><b>Route B</b><br><span class="text-muted text-sm">SE zones</span></td><td class="font-mono">MN20 XYZ</td><td>R. Ahmed</td><td>31 / 48</td><td>148 / 230</td><td><div class="progress-bar"><div class="progress-fill blue" style="width:65%"></div></div><div class="text-sm text-muted" style="margin-top:2px">65%</div></td><td><div class="progress-bar"><div class="progress-fill blue" style="width:64%"></div></div></td><td><span class="badge badge-blue">In Progress</span></td><td><span class="link" onclick="show('route-drill')">View →</span></td></tr>
+              <tr><td><b>Route C</b><br><span class="text-muted text-sm">EC zones</span></td><td class="font-mono">PQ19 DEF</td><td>S. Williams</td><td>28 / 35</td><td>134 / 168</td><td><div class="progress-bar"><div class="progress-fill blue" style="width:80%"></div></div><div class="text-sm text-muted" style="margin-top:2px">80%</div></td><td><div class="progress-bar"><div class="progress-fill blue" style="width:80%"></div></div></td><td><span class="badge badge-blue">In Progress</span></td><td><span class="link" onclick="show('route-drill')">View →</span></td></tr>
+              <tr><td><b>Route D</b><br><span class="text-muted text-sm">W zones</span></td><td class="font-mono">RS22 GHI</td><td>T. O'Brien</td><td>41 / 56</td><td>196 / 268</td><td><div class="progress-bar"><div class="progress-fill amber" style="width:73%"></div></div><div class="text-sm text-muted" style="margin-top:2px">73% · 2 exceptions</div></td><td><div class="progress-bar"><div class="progress-fill amber" style="width:73%"></div></div></td><td><span class="badge badge-amber">Exception</span></td><td><span class="link" onclick="show('route-drill')">View →</span></td></tr>
+              <tr><td><b>Route E</b><br><span class="text-muted text-sm">N zones</span></td><td class="font-mono">TU18 JKL</td><td>M. Khan</td><td>0 / 28</td><td>0 / 138</td><td><div class="progress-bar"><div class="progress-fill blue" style="width:0%"></div></div><div class="text-sm text-muted" style="margin-top:2px">Departed 11:30</div></td><td><div class="progress-bar"><div class="progress-fill blue" style="width:0%"></div></div></td><td><span class="badge badge-blue">Departed</span></td><td><span class="link" onclick="show('route-drill')">View →</span></td></tr>
+              <tr><td><b>Route F</b><br><span class="text-muted text-sm">E zones</span></td><td class="font-mono">VW21 MNO</td><td>C. Davis</td><td>—</td><td>—</td><td><div class="progress-bar"></div><div class="text-sm text-muted" style="margin-top:2px">Awaiting manifest</div></td><td><div class="progress-bar"></div></td><td><span class="badge badge-grey">Pending</span></td><td><span class="link" onclick="show('manifest')">Manifest →</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-header"><span class="card-title">⚠ Open Exceptions</span></div><div class="card-body" style="padding:0"><table><thead><tr><th>Order</th><th>Box</th><th>Route</th><th></th></tr></thead><tbody><tr><td class="font-mono">ORD-4421</td><td>2 of 3</td><td>Route D</td><td><span class="link">View</span></td></tr><tr><td class="font-mono">ORD-4398</td><td>1 of 2</td><td>Route D</td><td><span class="link">View</span></td></tr><tr><td class="font-mono">ORD-4367</td><td>3 of 4</td><td>Route B</td><td><span class="link">View</span></td></tr></tbody></table></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">📦 Awaiting Goods</span></div><div class="card-body" style="padding:0"><table><thead><tr><th>Order</th><th>Boxes Expected</th><th>Received</th></tr></thead><tbody><tr><td class="font-mono">ORD-4501</td><td>4</td><td><span class="badge badge-amber">2 / 4</span></td></tr><tr><td class="font-mono">ORD-4498</td><td>2</td><td><span class="badge badge-red">0 / 2</span></td></tr><tr><td class="font-mono">ORD-4487</td><td>6</td><td><span class="badge badge-amber">4 / 6</span></td></tr></tbody></table></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: ROUTE DRILLDOWN
+══════════════════════════════════════════════════ -->
+<div id="s-route-drill" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><a class="link" onclick="show('dashboard')">Dashboard</a><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Route B — Detail</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item active"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b" class="ctx-urole-sb">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header">
+        <div><div class="page-title">Route B — Delivery Detail</div><div class="page-sub">London Central · 12 Mar 2026 · R. Ahmed · MN20 XYZ</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="show('dashboard')">← Back to Dashboard</button>
+      </div>
+      <div class="content">
+        <div class="stats-row"><div class="stat-card blue"><div class="stat-label">Deliveries</div><div class="stat-value" style="font-size:22px">31/48</div><div class="stat-sub">65% complete</div></div><div class="stat-card green"><div class="stat-label">Boxes Delivered</div><div class="stat-value" style="font-size:22px">148/230</div><div class="stat-sub">64% complete</div></div><div class="stat-card amber"><div class="stat-label">Exceptions</div><div class="stat-value" style="font-size:22px">1</div><div class="stat-sub">Missing box</div></div><div class="stat-card blue"><div class="stat-label">Last Activity</div><div class="stat-value" style="font-size:18px">11:43</div><div class="stat-sub">SE5 7AB</div></div></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Delivery Stops</span><div class="flex-row"><input type="text" placeholder="Search…" style="font-size:12px;padding:5px 10px;width:180px"><select style="font-size:12px;padding:5px 8px"><option>All statuses</option><option>Delivered</option><option>Pending</option></select></div></div>
+          <table>
+            <thead><tr><th>#</th><th>Address</th><th>Postcode</th><th>Boxes</th><th>Status</th><th>Delivery Time</th><th>POD</th></tr></thead>
+            <tbody>
+              <tr><td class="text-muted">1</td><td>14 Borough Market St</td><td class="font-mono">SE1 9AB</td><td>3</td><td><span class="badge badge-green">Delivered</span></td><td>08:54</td><td><span class="link">📷 View</span></td></tr>
+              <tr><td class="text-muted">2</td><td>88 Tooley Street</td><td class="font-mono">SE1 2TF</td><td>1</td><td><span class="badge badge-green">Delivered</span></td><td>09:11</td><td><span class="link">📷 View</span></td></tr>
+              <tr><td class="text-muted">3</td><td>21 Bermondsey St</td><td class="font-mono">SE1 3UH</td><td>5</td><td><span class="badge badge-green">Delivered</span></td><td>09:28</td><td><span class="link">📷 View</span></td></tr>
+              <tr style="background:#fff8f1"><td class="text-muted">6</td><td>77 Denmark Hill</td><td class="font-mono">SE5 8RX</td><td>2 of 3</td><td><span class="badge badge-amber">Part Delivered</span></td><td>10:19</td><td><span class="link">📷 View</span></td></tr>
+              <tr><td class="text-muted text-sm" colspan="7" style="text-align:center;padding:6px;background:var(--grey-50)">… 27 more stops …</td></tr>
+              <tr><td class="text-muted">32</td><td>19 New Cross Road</td><td class="font-mono">SE14 5DS</td><td>3</td><td><span class="badge badge-grey">Pending</span></td><td>—</td><td>—</td></tr>
+              <tr><td class="text-muted">33</td><td>8 Lewisham High St</td><td class="font-mono">SE13 6EJ</td><td>2</td><td><span class="badge badge-grey">Pending</span></td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: ORDER ENTRY
+══════════════════════════════════════════════════ -->
+<div id="s-order-entry" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Order Entry</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Orders go to this depot</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item active"><span class="icon">📦</span> Order Entry <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b" class="ctx-urole-sb">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header">
+        <div><div class="page-title">Manual Order Entry</div><div class="page-sub">Adding order to: <strong id="oe-depot-name">London Central</strong></div></div>
+        <button class="btn btn-secondary btn-sm">⬆ Import CSV</button>
+        <button class="btn btn-secondary btn-sm">View API Spec</button>
+      </div>
+      <div class="content">
+        <div class="alert alert-blue">📍 This order will be allocated to a route at <strong id="oe-depot-alert">London Central</strong>. To add an order to a different depot, change the Working Depot in the top bar.</div>
+        <div class="g2" style="align-items:start">
+          <div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Order Identification</span></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group"><label>Order ID *</label><input value="ORD-4521"></div>
+                  <div class="form-group"><label>Despatch ID *</label><input value="DSP-8834"></div>
+                  <div class="form-group"><label>Order Date *</label><input type="date" value="2026-03-12"></div>
+                  <div class="form-group"><label>Requested Delivery Date</label><input type="date" value="2026-03-14"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Delivery Address</span></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group span2"><label>Customer / Company Name *</label><input value="Acme Supplies Ltd"></div>
+                  <div class="form-group span2"><label>Address Line 1 *</label><input value="Unit 4, Station Road"></div>
+                  <div class="form-group span2"><label>Address Line 2</label><input value="Vauxhall"></div>
+                  <div class="form-group"><label>Town / City *</label><input value="London"></div>
+                  <div class="form-group"><label>Postcode *</label><input value="SW8 1RT" style="font-family:var(--mono);font-weight:600"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Box Details</span></div>
+              <div class="card-body">
+                <div class="form-grid"><div class="form-group"><label>Number of Boxes *</label><input type="number" value="3"></div><div class="form-group"><label>Box ID Prefix</label><input value="BOX-DSP8834-"></div></div>
+                <div style="margin-top:10px;padding:9px;background:var(--grey-50);border-radius:5px;font-size:12px;color:var(--grey-600)">IDs: <span class="font-mono">BOX-DSP8834-001</span>, <span class="font-mono">-002</span>, <span class="font-mono">-003</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card section-gap" style="border:2px solid var(--blue)">
+              <div class="card-header" style="background:#e8f0fe"><span class="card-title" style="color:var(--blue)">🗺 Route Allocation Preview</span></div>
+              <div class="card-body">
+                <div style="margin-bottom:10px"><div class="text-sm text-muted" style="margin-bottom:3px">Postcode:</div><div style="font-family:var(--mono);font-size:18px;font-weight:700">SW8 1RT</div></div>
+                <div style="margin-bottom:10px">
+                  <div class="text-sm text-muted" style="margin-bottom:5px">Hierarchy match:</div>
+                  <div>
+                    <div class="pc-level" style="background:var(--blue-light)"><div class="pc-dot active"></div><div class="pc-code">SW8 1RT</div><div style="flex:1;font-size:11px;color:var(--blue)">→ Route A</div><span style="font-size:9px;background:var(--blue);color:white;padding:1px 5px;border-radius:8px;font-weight:700">MATCH</span></div>
+                    <div class="pc-level" style="opacity:.4"><div class="pc-dot fallback"></div><div class="pc-code">SW8 1</div><div class="text-muted text-sm" style="flex:1">Sector — skipped</div></div>
+                    <div class="pc-level" style="opacity:.4"><div class="pc-dot fallback"></div><div class="pc-code">SW8</div><div class="text-muted text-sm" style="flex:1">District — skipped</div></div>
+                    <div class="pc-level" style="opacity:.4"><div class="pc-dot fallback"></div><div class="pc-code">SW</div><div class="text-muted text-sm" style="flex:1">Area — skipped</div></div>
+                    <div class="pc-level" style="border-radius:0 0 6px 6px;opacity:.4"><div class="pc-dot fallback"></div><div class="pc-code">S</div><div class="text-muted text-sm" style="flex:1">Letter — skipped</div></div>
+                  </div>
+                </div>
+                <div style="padding:12px;background:white;border-radius:6px;border:1px solid var(--green);margin-bottom:10px">
+                  <div class="text-sm text-muted" style="margin-bottom:4px">Allocated to:</div>
+                  <div style="font-size:16px;font-weight:700">Route A</div>
+                  <div class="text-sm text-muted">London Central · SW zones</div>
+                </div>
+                <div class="alert alert-green" style="margin:0;font-size:11.5px">✓ Ready to submit. Order will be assigned to Route A at London Central.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+          <button class="btn btn-secondary">Clear</button>
+          <button class="btn btn-primary">Submit Order →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: GOODS RECEIVING
+══════════════════════════════════════════════════ -->
+<div id="s-goods-receiving" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Goods Receiving</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Checking in goods at this depot</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item active"><span class="icon">🔍</span> Goods Receiving <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Goods Receiving</div><div class="page-sub">London Central · Check in arriving boxes</div></div><div style="display:flex;align-items:center;gap:6px;background:var(--amber-light);padding:5px 10px;border-radius:5px;font-size:12px;color:#92400e">🟡 14 orders awaiting goods</div></div>
+      <div class="content">
+        <div class="g2" style="align-items:start">
+          <div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Check In a Box</span></div>
+              <div class="card-body">
+                <div class="alert alert-blue">Scan or enter the box ID to check it in against an order.</div>
+                <div class="form-group" style="margin-bottom:10px"><label>Box ID / Barcode</label><div style="display:flex;gap:8px"><input value="BOX-DSP8820-002" style="flex:1;font-family:var(--mono)"><button class="btn btn-primary">Check In</button></div></div>
+                <div style="padding:12px;background:var(--green-light);border-radius:6px;border:1px solid #6ee7b7"><div style="font-weight:600;color:#065f46;margin-bottom:4px">✓ Box found — ORD-4498</div><div class="text-sm" style="color:#065f46"><strong>Acme Supplies Ltd</strong> · SW8 1RT · Route A<br>Box 2 of 2 — all boxes now received</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Orders Awaiting Goods</span></div>
+              <div class="card-body" style="padding:0">
+                <table><thead><tr><th>Order ID</th><th>Customer</th><th>Route</th><th>Boxes</th></tr></thead><tbody>
+                  <tr style="background:#fffbeb"><td class="font-mono">ORD-4501</td><td>B&Q Vauxhall</td><td>Route A</td><td><span class="badge badge-amber">2 / 4</span></td></tr>
+                  <tr style="background:#f0fdf4"><td class="font-mono">ORD-4498</td><td>Acme Supplies</td><td>Route A</td><td><span class="badge badge-green">2 / 2 ✓</span></td></tr>
+                  <tr style="background:#fffbeb"><td class="font-mono">ORD-4487</td><td>TechParts Ltd</td><td>Route B</td><td><span class="badge badge-amber">4 / 6</span></td></tr>
+                  <tr style="background:#fff1f2"><td class="font-mono">ORD-4477</td><td>Metro Foods</td><td>Route D</td><td><span class="badge badge-red">0 / 5</span></td></tr>
+                </tbody></table>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Order Detail — ORD-4501</span><span class="badge badge-amber">Partial</span></div>
+              <div class="card-body">
+                <div style="margin-bottom:12px;font-size:12.5px"><div><strong>Customer:</strong> B&Q Vauxhall</div><div><strong>Route:</strong> Route A · London Central</div></div>
+                <div style="margin-bottom:10px"><div style="font-weight:600;font-size:12px;margin-bottom:7px">Box Status (4 expected)</div>
+                  <div class="box-grid">
+                    <div class="box-item received"><div style="font-size:18px">📦</div><div class="font-mono" style="font-size:10px">BOX-001</div><div style="color:#065f46;font-size:10px;margin-top:2px">✓ 09:14</div></div>
+                    <div class="box-item received"><div style="font-size:18px">📦</div><div class="font-mono" style="font-size:10px">BOX-002</div><div style="color:#065f46;font-size:10px;margin-top:2px">✓ 09:14</div></div>
+                    <div class="box-item pending"><div style="font-size:18px">📦</div><div class="font-mono" style="font-size:10px">BOX-003</div><div style="color:#92400e;font-size:10px;margin-top:2px">Awaiting</div></div>
+                    <div class="box-item pending"><div style="font-size:18px">📦</div><div class="font-mono" style="font-size:10px">BOX-004</div><div style="color:#92400e;font-size:10px;margin-top:2px">Awaiting</div></div>
+                  </div>
+                </div>
+                <div style="padding:9px;background:var(--grey-50);border-radius:5px;font-size:12px;color:var(--grey-600);margin-bottom:10px">Boxes 001 and 002 will be manifested. Missing boxes will be added to the next Route A run when received.</div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" style="flex:1">Flag Exception</button><button class="btn btn-primary btn-sm" style="flex:1">Ready for Manifest</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: MANIFEST BUILDER
+══════════════════════════════════════════════════ -->
+<div id="s-manifest" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Manifests</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item active"><span class="icon">📋</span> Manifests <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Manifest Builder — Route F</div><div class="page-sub">London Central · 12 Mar 2026 · Draft</div></div><button class="btn btn-secondary btn-sm">Save Draft</button><button class="btn btn-success">✓ Confirm Manifest</button></div>
+      <div class="content">
+        <div class="alert alert-amber">⚠ 2 orders have outstanding boxes not yet arrived. Available boxes will be manifested; missing boxes scheduled to next run automatically.</div>
+        <div class="g2" style="align-items:start">
+          <div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Manifest Details</span></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group"><label>Route</label><input value="Route F — E1, E2, E14" disabled></div>
+                  <div class="form-group"><label>Delivery Date</label><input type="date" value="2026-03-12"></div>
+                  <div class="form-group"><label>Driver *</label><select><option>C. Davis</option><option>J. Patel</option></select></div>
+                  <div class="form-group"><label>Vehicle *</label><select><option>VW21 MNO — Transit LWB</option><option>LK71 ABC</option></select></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Delivery Stops (18)</span><span class="text-sm text-muted">94 boxes to load</span></div>
+              <table><thead><tr><th>Order</th><th>Address</th><th>Boxes</th><th>Status</th><th></th></tr></thead><tbody>
+                <tr><td class="font-mono">ORD-4505</td><td>14 Commercial Rd E1</td><td>4</td><td><span class="badge badge-green">Ready</span></td><td><span class="link">Remove</span></td></tr>
+                <tr><td class="font-mono">ORD-4507</td><td>8 Whitechapel High St</td><td>2</td><td><span class="badge badge-green">Ready</span></td><td><span class="link">Remove</span></td></tr>
+                <tr style="background:#fffbeb"><td class="font-mono">ORD-4511</td><td>22 Bow Road E3</td><td>3 of 5</td><td><span class="badge badge-amber">Part — 2 missing</span></td><td><span class="link">Remove</span></td></tr>
+                <tr style="background:#fffbeb"><td class="font-mono">ORD-4515</td><td>99 Isle of Dogs E14</td><td>2 of 3</td><td><span class="badge badge-amber">Part — 1 missing</span></td><td><span class="link">Remove</span></td></tr>
+                <tr><td class="text-muted text-sm" colspan="5" style="text-align:center;padding:6px;background:var(--grey-50)">…14 more orders…</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Summary</span></div>
+              <div class="card-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                  <div style="padding:10px;background:var(--grey-50);border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700">18</div><div class="text-sm text-muted">Stops</div></div>
+                  <div style="padding:10px;background:var(--grey-50);border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700">94</div><div class="text-sm text-muted">Boxes to load</div></div>
+                  <div style="padding:10px;background:var(--amber-light);border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700;color:#92400e">3</div><div class="text-sm" style="color:#92400e">Missing boxes</div></div>
+                  <div style="padding:10px;background:var(--green-light);border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700;color:#065f46">16</div><div class="text-sm" style="color:#065f46">Complete orders</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Manifest Lifecycle</span></div>
+              <div class="card-body">
+                <div class="tl-item"><div class="tl-dot done"></div><div class="tl-line"></div><div><div class="text-bold text-sm">Orders allocated</div><div class="text-sm text-muted">18 orders on Route F</div></div></div>
+                <div class="tl-item"><div class="tl-dot done"></div><div class="tl-line"></div><div><div class="text-bold text-sm">Goods received</div><div class="text-sm text-muted">94 of 97 boxes checked in</div></div></div>
+                <div class="tl-item"><div class="tl-dot current"></div><div class="tl-line"></div><div><div class="text-bold text-sm" style="color:var(--blue)">Manifest building ←</div><div class="text-sm text-muted">Assign driver & vehicle</div></div></div>
+                <div class="tl-item"><div class="tl-dot pending"></div><div class="tl-line"></div><div><div class="text-bold text-sm text-muted">Confirmed & locked</div></div></div>
+                <div class="tl-item"><div class="tl-dot pending"></div><div><div class="text-bold text-sm text-muted">Vehicle departed</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: ROUTES
+══════════════════════════════════════════════════ -->
+<div id="s-routes" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Routes</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Showing routes for this depot only</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item active"><span class="icon">🗺</span> Routes <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Routes</div><div class="page-sub">London Central · 6 routes</div></div><button class="btn btn-primary">+ Add Route</button></div>
+      <div class="content">
+        <div class="alert alert-blue">Routes are permanently assigned to this depot. To move postcode coverage to another depot, reassign postcode rules via <span class="link" onclick="show('postcodes')">Postcode Rules</span>.</div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Routes — London Central</span></div>
+          <table><thead><tr><th>Code</th><th>Name</th><th>Coverage</th><th>Postcode Rules</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td><span class="tag">ROUTE-A</span></td><td class="text-bold">Route A — South West</td><td>SW1–SW20</td><td>42 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+            <tr><td><span class="tag">ROUTE-B</span></td><td class="text-bold">Route B — South East</td><td>SE1–SE25</td><td>38 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+            <tr><td><span class="tag">ROUTE-C</span></td><td class="text-bold">Route C — City</td><td>EC1–EC4</td><td>28 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+            <tr><td><span class="tag">ROUTE-D</span></td><td class="text-bold">Route D — West End</td><td>W1–W14, WC1–WC2</td><td>51 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+            <tr><td><span class="tag">ROUTE-E</span></td><td class="text-bold">Route E — North</td><td>N1–N22</td><td>35 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+            <tr><td><span class="tag">ROUTE-F</span></td><td class="text-bold">Route F — East</td><td>E1–E18</td><td>44 rules</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="show('postcodes')">Postcodes</span><span class="link">Edit</span></div></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: POSTCODE RULES
+══════════════════════════════════════════════════ -->
+<div id="s-postcodes" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Postcode Rules</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Rules for routes in this depot</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item active"><span class="icon">📮</span> Postcode Rules <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Postcode Rules</div><div class="page-sub">London Central · Routes and their postcode coverage</div></div><button class="btn btn-primary">+ Add Rule</button></div>
+      <div class="content">
+        <div class="g2" style="align-items:start">
+          <div>
+            <div class="card section-gap">
+              <div class="card-header"><span class="card-title">Postcode Lookup Test</span></div>
+              <div class="card-body">
+                <div style="display:flex;gap:8px;margin-bottom:10px"><input value="SW8 1RT" style="flex:1;font-family:var(--mono)"><button class="btn btn-primary btn-sm">Test</button></div>
+                <div style="font-size:12px;font-weight:600;color:var(--grey-600);margin-bottom:5px">Hierarchy for SW8 1RT:</div>
+                <div>
+                  <div class="pc-level" style="background:var(--blue-light)"><div class="pc-dot active"></div><div class="pc-code">SW8 1RT</div><div style="flex:1;font-size:11px;color:var(--blue)">→ Route A</div><span style="font-size:9px;background:var(--blue);color:white;padding:1px 5px;border-radius:8px;font-weight:700">MATCH</span></div>
+                  <div class="pc-level" style="opacity:.45"><div class="pc-dot fallback"></div><div class="pc-code">SW8 1</div><div class="text-muted text-sm" style="flex:1">Sector — skipped</div></div>
+                  <div class="pc-level" style="opacity:.45"><div class="pc-dot fallback"></div><div class="pc-code">SW8</div><div class="text-muted text-sm" style="flex:1">District — skipped</div></div>
+                  <div class="pc-level" style="opacity:.45"><div class="pc-dot fallback"></div><div class="pc-code">SW</div><div class="text-muted text-sm" style="flex:1">Area — skipped</div></div>
+                  <div class="pc-level" style="border-radius:0 0 6px 6px;opacity:.45"><div class="pc-dot fallback"></div><div class="pc-code">S</div><div class="text-muted text-sm" style="flex:1">Letter — fallback</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Add / Edit Rule</span></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group"><label>Postcode Pattern *</label><input placeholder="e.g. SW8 or SW8 1AA" style="font-family:var(--mono)"></div>
+                  <div class="form-group"><label>Route *</label><select><option>Route A</option><option>Route B</option><option>Route C</option><option>Route D</option><option>Route E</option><option>Route F</option></select></div>
+                  <div class="form-group"><label>Effective From *</label><input type="date" value="2026-03-13"></div>
+                  <div class="form-group"><label>Effective To (blank = open)</label><input type="date"></div>
+                  <div class="form-group span2"><label>Reason (audit note)</label><input placeholder="e.g. Boundary adjustment — Vauxhall transfer"></div>
+                </div>
+                <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-secondary btn-sm">Cancel</button><button class="btn btn-primary btn-sm">Save Rule</button></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Active Rules</span><div class="flex-row" style="gap:6px"><select style="font-size:12px;padding:4px 8px"><option>All routes</option><option>Route A</option><option>Route B</option></select><select style="font-size:12px;padding:4px 8px"><option>All levels</option><option>Full</option><option>Sector</option><option>District</option><option>Area</option><option>Letter</option></select></div></div>
+              <table><thead><tr><th>Pattern</th><th>Level</th><th>Route</th><th>From</th><th>To</th><th></th></tr></thead><tbody>
+                <tr><td class="font-mono text-bold">SW8 1RT</td><td><span class="tag">Full</span></td><td>Route A</td><td>01/01/26</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="font-mono">SW8 1</td><td><span class="tag">Sector</span></td><td>Route A</td><td>01/01/26</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="font-mono">SW8</td><td><span class="tag">District</span></td><td>Route A</td><td>01/01/26</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="font-mono">SE1</td><td><span class="tag">District</span></td><td>Route B</td><td>01/01/26</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="font-mono">EC1</td><td><span class="tag">District</span></td><td>Route C</td><td>01/01/26</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="font-mono">S</td><td><span class="tag">Letter</span></td><td>Route A</td><td>01/01/24</td><td>—</td><td><span class="link">Edit</span></td></tr>
+                <tr><td class="text-muted text-sm" colspan="6" style="text-align:center;padding:6px">… 232 more active rules …</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: VEHICLES
+══════════════════════════════════════════════════ -->
+<div id="s-vehicles" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Vehicles</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Fleet for this depot</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item active"><span class="icon">🚐</span> Vehicles <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Vehicle Fleet</div><div class="page-sub">London Central · 8 vehicles</div></div><button class="btn btn-primary">+ Add Vehicle</button></div>
+      <div class="content">
+        <div class="alert alert-amber">⚠ 1 vehicle has MOT due within 30 days — <span class="link">VW21 MNO</span></div>
+        <div class="card">
+          <table><thead><tr><th>Registration</th><th>Make / Model</th><th>Capacity</th><th>MOT Due</th><th>Next Service</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td class="font-mono text-bold">LK71 ABC</td><td>Ford Transit SWB</td><td>900kg / 6m³</td><td>Aug 2026</td><td>Jun 2026</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="font-mono text-bold">MN20 XYZ</td><td>Ford Transit LWB</td><td>1100kg / 8m³</td><td>Sep 2026</td><td>Jul 2026</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="font-mono text-bold">PQ19 DEF</td><td>Mercedes Sprinter</td><td>1200kg / 9m³</td><td>Nov 2026</td><td>Aug 2026</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr style="background:#fffbeb"><td class="font-mono text-bold">VW21 MNO</td><td>Mercedes Sprinter LWB</td><td>1300kg / 10m³</td><td style="color:var(--amber);font-weight:600">Apr 2026 ⚠</td><td>Mar 2026</td><td><span class="badge badge-amber">MOT Due Soon</span></td><td><span class="link">Edit</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: DRIVERS
+══════════════════════════════════════════════════ -->
+<div id="s-drivers" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Drivers</span><span style="margin-left:8px;font-size:11px;padding:2px 7px;background:var(--blue-light);color:var(--blue);border-radius:10px;font-weight:600">Drivers at this depot</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item active"><span class="icon">👤</span> Drivers <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Driver Management</div><div class="page-sub">London Central · 12 drivers</div></div><button class="btn btn-primary">+ Add Driver</button></div>
+      <div class="content">
+        <div class="card">
+          <table><thead><tr><th>Name</th><th>Licence No.</th><th>Expiry</th><th>Contact</th><th>Today's Route</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td class="text-bold">James Patel</td><td class="font-mono">PATEL901021JA9ML</td><td>Mar 2029</td><td>07700 900123</td><td>Route A</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Razia Ahmed</td><td class="font-mono">AHMED850514RA9ML</td><td>Nov 2027</td><td>07700 900456</td><td>Route B</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Sarah Williams</td><td class="font-mono">WILLI910308SW2ML</td><td>Jul 2028</td><td>07700 900789</td><td>Route C</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Thomas O'Brien</td><td class="font-mono">OBRIE880712TO9ML</td><td>Feb 2027</td><td>07700 900012</td><td>Route D</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Anna Kowalski</td><td class="font-mono">KOWAL950617AK1ML</td><td>Dec 2029</td><td>07700 900901</td><td>—</td><td><span class="badge badge-grey">Unavailable</span></td><td><span class="link">Edit</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: ALL DEPOTS (global)
+══════════════════════════════════════════════════ -->
+<div id="s-depots" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <!-- No depot picker on global screens — shows scope label instead -->
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;background:#f3f0ff;border-radius:6px;border:1.5px solid #c4b5fd">
+      <span style="font-size:11px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.5px">🌐 Global — All Depots</span>
+    </div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">All Depots</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name">Chris Admin</div><div class="ctx-user-role">Central Admin</div></div><div class="ctx-avatar admin">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item active"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin">CA</div><div><div style="font-size:12px;color:white;font-weight:500">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">All Depots</div><div class="page-sub">Central Admin · 28 depots across the network</div></div><button class="btn btn-primary">+ Add Depot</button></div>
+      <div class="content">
+        <div class="alert alert-blue" style="margin-bottom:18px">You are viewing all depots. To work within a specific depot (add orders, manage routes, vehicles etc.), select it from the <strong>Working Depot</strong> picker — visible on all depot-scoped screens.</div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">All Depots (28)</span><input placeholder="Search…" style="font-size:12px;padding:5px 10px;width:180px"></div>
+          <table><thead><tr><th>Depot Name</th><th>Location</th><th>Routes</th><th>Vehicles</th><th>Drivers</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td class="text-bold">London Central</td><td>Vauxhall, London</td><td>6</td><td>8</td><td>12</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="switchDepot('London Central')">Switch to →</span><span class="link">Edit</span></div></td></tr>
+            <tr><td class="text-bold">Manchester North</td><td>Salford, Manchester</td><td>4</td><td>5</td><td>8</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="switchDepot('Manchester North')">Switch to →</span><span class="link">Edit</span></div></td></tr>
+            <tr><td class="text-bold">Birmingham West</td><td>Handsworth, Birmingham</td><td>5</td><td>6</td><td>9</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="switchDepot('Birmingham West')">Switch to →</span><span class="link">Edit</span></div></td></tr>
+            <tr><td class="text-bold">Leeds Central</td><td>Holbeck, Leeds</td><td>3</td><td>4</td><td>6</td><td><span class="badge badge-green">Active</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="switchDepot('Leeds Central')">Switch to →</span><span class="link">Edit</span></div></td></tr>
+            <tr><td class="text-bold">Bristol South</td><td>Bedminster, Bristol</td><td>3</td><td>3</td><td>5</td><td><span class="badge badge-amber">Config Review</span></td><td><div class="flex-row" style="gap:6px"><span class="link" onclick="switchDepot('Bristol South')">Switch to →</span><span class="link">Edit</span></div></td></tr>
+            <tr><td class="text-muted text-sm" colspan="7" style="text-align:center;padding:8px">… 23 more depots …</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: USERS (global)
+══════════════════════════════════════════════════ -->
+<div id="s-users" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;background:#f3f0ff;border-radius:6px;border:1.5px solid #c4b5fd">
+      <span style="font-size:11px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.5px">🌐 Global — All Users</span>
+    </div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">User Management</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name">Chris Admin</div><div class="ctx-user-role">Central Admin</div></div><div class="ctx-avatar admin">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item active"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('audit')"><span class="icon">🔎</span> Audit Log</div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin">CA</div><div><div style="font-size:12px;color:white;font-weight:500">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">User Management</div><div class="page-sub">Central Admin · All users across all depots</div></div><button class="btn btn-primary">+ Invite User</button></div>
+      <div class="content">
+        <div class="tabs"><div class="tab active">System Users</div><div class="tab">API Keys</div><div class="tab">Pending Invites</div></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">All Users (47)</span><div class="flex-row" style="gap:8px"><input placeholder="Search…" style="font-size:12px;padding:5px 10px;width:160px"><select style="font-size:12px;padding:4px 8px"><option>All roles</option><option>Central Admin</option><option>Depot Manager</option><option>Driver</option></select><select style="font-size:12px;padding:4px 8px"><option>All depots</option><option>London Central</option><option>Manchester North</option></select></div></div>
+          <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Depot</th><th>Last Login</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td class="text-bold">Chris Admin</td><td>c.admin@deliverops.com</td><td><span class="badge badge-purple">Central Admin</span></td><td>All depots</td><td>Today 09:02</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Jane Smith</td><td>j.smith@depot-london.co.uk</td><td><span class="badge badge-blue">Depot Manager</span></td><td>London Central</td><td>Today 08:15</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">Mike Brown</td><td>m.brown@depot-mcr.co.uk</td><td><span class="badge badge-blue">Depot Manager</span></td><td>Manchester North</td><td>Yesterday</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-bold">James Patel</td><td>j.patel@depot-london.co.uk</td><td><span class="badge badge-grey">Driver</span></td><td>London Central</td><td>Today 07:58</td><td><span class="badge badge-green">Active</span></td><td><span class="link">Edit</span></td></tr>
+            <tr><td class="text-muted text-sm" colspan="7" style="text-align:center;padding:6px">… 43 more users …</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN: AUDIT LOG
+══════════════════════════════════════════════════ -->
+<div id="s-audit" class="screen">
+  <div class="ctx-bar">
+    <div class="ctx-logo"><div class="ctx-logo-mark">D</div><div class="ctx-logo-text">DeliverOps</div></div>
+    <div class="depot-picker"><span class="depot-picker-label">Working Depot</span><div class="depot-picker-select admin-only"><div class="depot-dot"></div><span class="dp-name">London Central</span><span class="arrow">▾</span></div></div>
+    <div class="ctx-crumb"><span class="ctx-crumb-sep">›</span><span class="ctx-crumb-active">Audit Log</span></div>
+    <div class="ctx-user"><div class="ctx-user-info"><div class="ctx-user-name ctx-uname">Chris Admin</div><div class="ctx-user-role ctx-urole">Central Admin</div></div><div class="ctx-avatar admin ctx-uav">CA</div></div>
+  </div>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-section depot">My Depot</div>
+      <div class="sidebar-item" onclick="show('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="show('order-entry')"><span class="icon">📦</span> Order Entry</div>
+      <div class="sidebar-item" onclick="show('goods-receiving')"><span class="icon">🔍</span> Goods Receiving</div>
+      <div class="sidebar-item" onclick="show('manifest')"><span class="icon">📋</span> Manifests</div>
+      <div class="sidebar-item" onclick="show('routes')"><span class="icon">🗺</span> Routes</div>
+      <div class="sidebar-item" onclick="show('postcodes')"><span class="icon">📮</span> Postcode Rules</div>
+      <div class="sidebar-item" onclick="show('vehicles')"><span class="icon">🚐</span> Vehicles</div>
+      <div class="sidebar-item" onclick="show('drivers')"><span class="icon">👤</span> Drivers</div>
+      <div class="sidebar-section system">System</div>
+      <div class="sidebar-item" onclick="show('depots')"><span class="icon">🏭</span> All Depots <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item" onclick="show('users')"><span class="icon">👥</span> Users <span class="scope-pill scope-system">global</span></div>
+      <div class="sidebar-item active"><span class="icon">🔎</span> Audit Log <span class="scope-pill scope-depot">depot</span></div>
+      <div class="sidebar-user"><div class="sidebar-avatar admin ctx-uav-sb">CA</div><div><div style="font-size:12px;color:white;font-weight:500" class="ctx-uname-sb">Chris Admin</div><div style="font-size:10px;color:#64748b">Central Admin</div></div></div>
+    </div>
+    <div class="main">
+      <div class="page-header"><div><div class="page-title">Audit Log</div><div class="page-sub">London Central · Read-only record of all changes</div></div><button class="btn btn-secondary btn-sm">⬇ Export CSV</button></div>
+      <div class="content">
+        <div class="card section-gap">
+          <div class="card-header"><span class="card-title">Filters</span></div>
+          <div class="card-body">
+            <div class="form-grid-3">
+              <div class="form-group"><label>Date Range</label><div class="flex-row" style="gap:5px"><input type="date" value="2026-03-01" style="flex:1"><span class="text-muted">–</span><input type="date" value="2026-03-12" style="flex:1"></div></div>
+              <div class="form-group"><label>Entity Type</label><select><option>All types</option><option>Postcode Rule</option><option>Route</option><option>Vehicle</option><option>Driver</option><option>Manifest</option><option>Order</option></select></div>
+              <div class="form-group"><label>User</label><select><option>All users</option><option>Jane Smith</option><option>Chris Admin</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Audit Events</span><span class="text-muted text-sm">342 events in range</span></div>
+          <table><thead><tr><th>Timestamp</th><th>User</th><th>Role</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody>
+            <tr><td class="font-mono text-sm">12/03/26 11:32</td><td>Jane Smith</td><td><span class="badge badge-blue">Depot Mgr</span></td><td><span class="badge badge-blue">UPDATE</span></td><td>Postcode Rule</td><td>SW8 1RT → Route A (eff. 13/03/26)</td></tr>
+            <tr><td class="font-mono text-sm">12/03/26 10:15</td><td>Jane Smith</td><td><span class="badge badge-blue">Depot Mgr</span></td><td><span class="badge badge-green">CREATE</span></td><td>Manifest</td><td>Route E confirmed — 28 stops, 138 boxes</td></tr>
+            <tr><td class="font-mono text-sm">12/03/26 09:44</td><td>Jane Smith</td><td><span class="badge badge-blue">Depot Mgr</span></td><td><span class="badge badge-green">CREATE</span></td><td>Order</td><td>ORD-4521 / DSP-8834 — SW8 1RT → Route A</td></tr>
+            <tr><td class="font-mono text-sm">11/03/26 16:02</td><td>Chris Admin</td><td><span class="badge badge-purple">Central Admin</span></td><td><span class="badge badge-blue">UPDATE</span></td><td>Postcode Rule</td><td>SE14 5 moved: Route C → Route B (eff. 01/04/26)</td></tr>
+            <tr><td class="font-mono text-sm">09/03/26 09:05</td><td>API System</td><td><span class="badge badge-grey">API</span></td><td><span class="badge badge-green">CREATE</span></td><td>Order</td><td>ORD-4499 / DSP-8810 — N1 7GH → Route E (via API)</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let currentRole = 'admin'; // 'admin' or 'manager'
+let currentDepot = 'London Central';
+
+const depots = ['London Central','Manchester North','Birmingham West','Leeds Central','Bristol South','Glasgow East'];
+
+const roleConfig = {
+  admin:   { name:'Chris Admin',  role:'Central Admin',  initials:'CA', cls:'admin'   },
+  manager: { name:'Jane Smith',   role:'Depot Manager',  initials:'JS', cls:'manager' }
+};
+
+// ── NAVIGATION ─────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const screen = document.getElementById('s-' + id);
+  if (screen) screen.classList.add('active');
+  const labels = {
+    'login':'Login','dashboard':'Dashboard','route-drill':'Route Drilldown',
+    'order-entry':'Order Entry','goods-receiving':'Goods Receiving','manifest':'Manifest Builder',
+    'routes':'Routes','postcodes':'Postcode Rules','vehicles':'Vehicles','drivers':'Drivers',
+    'depots':'Depots','users':'User Mgmt','audit':'Audit Log'
+  };
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.trim() === labels[id]) b.classList.add('active');
+  });
+  applyRoleAndDepot();
+  window.scrollTo(0, 0);
+}
+
+// ── ROLE SWITCHING ─────────────────────────────────────
+function setRole(role) {
+  currentRole = role;
+  document.getElementById('pill-admin').style.opacity   = role === 'admin'   ? '1' : '.35';
+  document.getElementById('pill-manager').style.opacity = role === 'manager' ? '1' : '.35';
+  applyRoleAndDepot();
+}
+
+// ── DEPOT SWITCHING (from Depots list) ────────────────
+function switchDepot(name) {
+  currentDepot = name;
+  applyRoleAndDepot();
+  show('dashboard');
+}
+
+// ── APPLY ROLE + DEPOT TO CURRENT VISIBLE SCREEN ──────
+function applyRoleAndDepot() {
+  const cfg = roleConfig[currentRole];
+
+  // Update all depot picker selects
+  document.querySelectorAll('.depot-picker-select').forEach(el => {
+    const nameEl = el.querySelector('.dp-name, span:not(.arrow):not(.depot-dot)');
+    if (nameEl) nameEl.textContent = currentDepot;
+
+    if (currentRole === 'manager') {
+      el.classList.add('locked');
+      el.querySelector('.arrow').textContent = '🔒';
+    } else {
+      el.classList.remove('locked');
+      el.querySelector('.arrow').textContent = '▾';
+    }
+  });
+
+  // Update named depot elements
+  const namedEls = {
+    'oe-depot-name': currentDepot,
+    'oe-depot-alert': currentDepot,
+    'dash-sub': currentDepot + ' · Live · 12 Mar 2026',
+  };
+  Object.entries(namedEls).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  });
+
+  // Update user info in ctx bars
+  document.querySelectorAll('.ctx-uname').forEach(el => el.textContent = cfg.name);
+  document.querySelectorAll('.ctx-urole').forEach(el => el.textContent = cfg.role);
+  document.querySelectorAll('.ctx-uav').forEach(el => {
+    el.textContent = cfg.initials;
+    el.className = 'ctx-avatar ' + cfg.cls;
+  });
+
+  // Sidebar user
+  document.querySelectorAll('.ctx-uname-sb').forEach(el => el.textContent = cfg.name);
+  document.querySelectorAll('.ctx-urole-sb').forEach(el => el.textContent = cfg.role);
+  document.querySelectorAll('.ctx-uav-sb').forEach(el => {
+    el.textContent = cfg.initials;
+    el.className = 'sidebar-avatar ' + cfg.cls;
+  });
+
+  // Hide System section items for depot manager
+  document.querySelectorAll('.scope-system').forEach(pill => {
+    const item = pill.closest('.sidebar-item');
+    if (item) item.style.display = currentRole === 'manager' ? 'none' : '';
+  });
+  document.querySelectorAll('.sidebar-section.system').forEach(el => {
+    el.style.display = currentRole === 'manager' ? 'none' : '';
+  });
+}
+
+// Init
+applyRoleAndDepot();
+</script>
+</body>
+</html>
