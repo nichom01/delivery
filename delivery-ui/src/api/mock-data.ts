@@ -3,7 +3,7 @@ import type { MockApiPayload } from './types';
 export const mockData: MockApiPayload = {
   currentUser: {
     name: 'Chris Admin',
-    role: 'central_admin',
+    role: 'CENTRAL_ADMIN',
     initials: 'CA',
   },
   depots: [
@@ -408,7 +408,7 @@ export const mockData: MockApiPayload = {
       id: 'user-1',
       name: 'Chris Admin',
       email: 'c.admin@deliverops.com',
-      role: 'central_admin',
+      role: 'CENTRAL_ADMIN',
       lastLogin: 'Today 09:02',
       status: 'Active',
     },
@@ -416,7 +416,7 @@ export const mockData: MockApiPayload = {
       id: 'user-2',
       name: 'Jane Smith',
       email: 'j.smith@depot-london.co.uk',
-      role: 'depot_manager',
+      role: 'DEPOT_MANAGER',
       depotId: 'depot-1',
       lastLogin: 'Today 08:15',
       status: 'Active',
@@ -425,7 +425,7 @@ export const mockData: MockApiPayload = {
       id: 'user-3',
       name: 'Mike Brown',
       email: 'm.brown@depot-mcr.co.uk',
-      role: 'depot_manager',
+      role: 'DEPOT_MANAGER',
       depotId: 'depot-2',
       lastLogin: 'Yesterday',
       status: 'Active',

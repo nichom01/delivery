@@ -81,8 +81,8 @@ export default function Users() {
                     {data.users.map((user) => {
                       const depot = user.depotId ? data.depots.find(d => d.id === user.depotId) : null;
                       const roleBadgeVariant =
-                        user.role === 'central_admin' ? 'purple' :
-                        user.role === 'depot_manager' ? 'blue' : 'grey';
+                        user.role === 'CENTRAL_ADMIN' ? 'purple' :
+                        user.role === 'DEPOT_MANAGER' ? 'blue' : 'grey';
                       return (
                         <tr key={user.id} className="hover:bg-gray-50">
                           <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 font-semibold">
@@ -93,8 +93,8 @@ export default function Users() {
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100">
                             <Badge variant={roleBadgeVariant as any}>
-                              {user.role === 'central_admin' ? 'Central Admin' :
-                               user.role === 'depot_manager' ? 'Depot Manager' : 'Driver'}
+                              {user.role === 'CENTRAL_ADMIN' ? 'Central Admin' :
+                               user.role === 'DEPOT_MANAGER' ? 'Depot Manager' : 'Driver'}
                             </Badge>
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">

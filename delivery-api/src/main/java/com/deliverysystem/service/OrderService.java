@@ -107,4 +107,66 @@ public class OrderService {
         
         return order;
     }
+    
+    @Transactional
+    public Box receiveBox(String boxId, User user) {
+        Box box = boxRepository.findById(boxId)
+            .orElseThrow(() -> new IllegalArgumentException("Box not found: " + boxId));
+        
+        if (box.getStatus() == Box.BoxStatus.RECEIVED) {
+            throw new IllegalStateException("Box " + boxId + " has already been received");
+        }
+        
+        box.setStatus(Box.BoxStatus.RECEIVED);
+        box.setReceivedAt(java.time.LocalDateTime.now());
+        box = boxRepository.save(box);
+        
+        // Audit
+        String depotId = box.getOrder().getRoute() != null && box.getOrder().getRoute().getDepot() != null ?
+            box.getOrder().getRoute().getDepot().getId() : null;
+        auditService.logUpdate(user, "Box", box.getId(), depotId, 
+            Box.BoxStatus.EXPECTED, Box.BoxStatus.RECEIVED);
+        
+        log.info("Box {} received for order {}", boxId, box.getOrder().getId());
+        
+        return box;
+    }
+    
+    @Transactional
+    public Order flagException(String orderId, String reason, User user) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        
+        String previousStatus = order.getStatus();
+        order.setStatus("EXCEPTION");
+        order = orderRepository.save(order);
+        
+        // Audit
+        String depotId = order.getRoute() != null && order.getRoute().getDepot() != null ?
+            order.getRoute().getDepot().getId() : null;
+        auditService.logUpdate(user, "Order", order.getId(), depotId, previousStatus, "EXCEPTION: " + reason);
+        
+        log.info("Order {} flagged with exception: {}", orderId, reason);
+        
+        return order;
+    }
+    
+    @Transactional
+    public Order markReadyForManifest(String orderId, User user) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        
+        String previousStatus = order.getStatus();
+        order.setStatus("READY_FOR_MANIFEST");
+        order = orderRepository.save(order);
+        
+        // Audit
+        String depotId = order.getRoute() != null && order.getRoute().getDepot() != null ?
+            order.getRoute().getDepot().getId() : null;
+        auditService.logUpdate(user, "Order", order.getId(), depotId, previousStatus, "READY_FOR_MANIFEST");
+        
+        log.info("Order {} marked as ready for manifest", orderId);
+        
+        return order;
+    }
 }

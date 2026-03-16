@@ -1,8 +1,15 @@
 package com.deliverysystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ApiResponse<T> {
+    @JsonProperty("success")
     private boolean success;
+    
+    @JsonProperty("message")
     private String message;
+    
+    @JsonProperty("data")
     private T data;
     
     public ApiResponse() {

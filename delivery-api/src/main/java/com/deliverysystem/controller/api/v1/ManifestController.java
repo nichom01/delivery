@@ -5,6 +5,7 @@ import com.deliverysystem.domain.User;
 import com.deliverysystem.dto.ApiResponse;
 import com.deliverysystem.dto.CreateManifestRequest;
 import com.deliverysystem.dto.ManifestDto;
+import com.deliverysystem.dto.UpdateManifestRequest;
 import com.deliverysystem.repository.ManifestRepository;
 import com.deliverysystem.repository.UserRepository;
 import com.deliverysystem.security.JwtTokenProvider;
@@ -79,6 +80,35 @@ public class ManifestController {
         
         Manifest manifest = manifestService.confirmManifest(id, user);
         return ResponseEntity.ok(ApiResponse.success("Manifest confirmed", toDto(manifest)));
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ManifestDto>> updateManifest(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateManifestRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        Manifest manifest = manifestService.updateManifest(
+            id, request.getDriverId(), request.getVehicleId(), request.getDate(), user);
+        return ResponseEntity.ok(ApiResponse.success("Manifest updated", toDto(manifest)));
+    }
+    
+    @DeleteMapping("/{id}/stops/{orderId}")
+    public ResponseEntity<ApiResponse<ManifestDto>> removeStopFromManifest(
+            @PathVariable String id,
+            @PathVariable String orderId,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        Manifest manifest = manifestService.removeStopFromManifest(id, orderId, user);
+        return ResponseEntity.ok(ApiResponse.success("Stop removed from manifest", toDto(manifest)));
     }
     
     private ManifestDto toDto(Manifest manifest) {

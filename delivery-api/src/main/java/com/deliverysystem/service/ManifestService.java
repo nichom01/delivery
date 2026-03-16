@@ -110,4 +110,94 @@ public class ManifestService {
         
         return manifest;
     }
+    
+    @Transactional
+    public Manifest updateManifest(String manifestId, String driverId, String vehicleId, String date, User user) {
+        Manifest manifest = manifestRepository.findById(manifestId)
+            .orElseThrow(() -> new IllegalArgumentException("Manifest not found: " + manifestId));
+        
+        if (manifest.getStatus() != Manifest.ManifestStatus.DRAFT) {
+            throw new IllegalStateException("Manifest is not in DRAFT status. Only DRAFT manifests can be updated.");
+        }
+        
+        Manifest.ManifestStatus previousStatus = manifest.getStatus();
+        Driver previousDriver = manifest.getDriver();
+        Vehicle previousVehicle = manifest.getVehicle();
+        LocalDate previousDate = manifest.getDate();
+        
+        // Update driver if provided
+        if (driverId != null && !driverId.isEmpty()) {
+            Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new IllegalArgumentException("Driver not found: " + driverId));
+            manifest.setDriver(driver);
+        }
+        
+        // Update vehicle if provided
+        if (vehicleId != null && !vehicleId.isEmpty()) {
+            Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + vehicleId));
+            manifest.setVehicle(vehicle);
+        }
+        
+        // Update date if provided
+        if (date != null && !date.isEmpty()) {
+            LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
+            manifest.setDate(localDate);
+        }
+        
+        manifest = manifestRepository.save(manifest);
+        
+        // Audit
+        String depotId = manifest.getRoute().getDepot() != null ? 
+            manifest.getRoute().getDepot().getId() : null;
+        String beforeValue = String.format("Driver: %s, Vehicle: %s, Date: %s", 
+            previousDriver.getId(), previousVehicle.getId(), previousDate);
+        String afterValue = String.format("Driver: %s, Vehicle: %s, Date: %s", 
+            manifest.getDriver().getId(), manifest.getVehicle().getId(), manifest.getDate());
+        auditService.logUpdate(user, "Manifest", manifest.getId(), depotId, beforeValue, afterValue);
+        
+        log.info("Updated manifest {}", manifestId);
+        
+        return manifest;
+    }
+    
+    @Transactional
+    public Manifest removeStopFromManifest(String manifestId, String orderId, User user) {
+        Manifest manifest = manifestRepository.findById(manifestId)
+            .orElseThrow(() -> new IllegalArgumentException("Manifest not found: " + manifestId));
+        
+        if (manifest.getStatus() != Manifest.ManifestStatus.DRAFT) {
+            throw new IllegalStateException("Manifest is not in DRAFT status. Only DRAFT manifests can be modified.");
+        }
+        
+        // Find all boxes for this order that are assigned to this manifest
+        List<Box> boxes = boxRepository.findByOrderId(orderId);
+        List<Box> boxesToRemove = boxes.stream()
+            .filter(box -> box.getManifest() != null && box.getManifest().getId().equals(manifestId))
+            .toList();
+        
+        if (boxesToRemove.isEmpty()) {
+            throw new IllegalArgumentException("Order " + orderId + " is not assigned to manifest " + manifestId);
+        }
+        
+        // Unassign boxes from manifest
+        for (Box box : boxesToRemove) {
+            box.setManifest(null);
+            // Reset status to RECEIVED if it was MANIFESTED
+            if (box.getStatus() == Box.BoxStatus.MANIFESTED) {
+                box.setStatus(Box.BoxStatus.RECEIVED);
+            }
+        }
+        boxRepository.saveAll(boxesToRemove);
+        
+        // Audit
+        String depotId = manifest.getRoute().getDepot() != null ? 
+            manifest.getRoute().getDepot().getId() : null;
+        auditService.logUpdate(user, "Manifest", manifest.getId(), depotId, 
+            "Order " + orderId + " included", "Order " + orderId + " removed");
+        
+        log.info("Removed order {} from manifest {}", orderId, manifestId);
+        
+        return manifest;
+    }
 }

@@ -1,6 +1,7 @@
 package com.deliverysystem.dto;
 
 public class PostcodeRuleDto {
+    private String id;
     private String pattern;
     private String level; // 'full' | 'sector' | 'district' | 'area' | 'letter'
     private String routeId;
@@ -11,13 +12,22 @@ public class PostcodeRuleDto {
     public PostcodeRuleDto() {
     }
     
-    public PostcodeRuleDto(String pattern, String level, String routeId, String routeName, String effectiveFrom, String effectiveTo) {
+    public PostcodeRuleDto(String id, String pattern, String level, String routeId, String routeName, String effectiveFrom, String effectiveTo) {
+        this.id = id;
         this.pattern = pattern;
         this.level = level;
         this.routeId = routeId;
         this.routeName = routeName;
         this.effectiveFrom = effectiveFrom;
         this.effectiveTo = effectiveTo;
+    }
+    
+    public String getId() {
+        return id;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
     }
     
     public String getPattern() {

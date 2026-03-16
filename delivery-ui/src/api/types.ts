@@ -1,13 +1,27 @@
-export type UserRole = 'central_admin' | 'depot_manager';
+// API Types matching backend DTOs
 
-export interface CurrentUser {
+export type UserRole = 'CENTRAL_ADMIN' | 'DEPOT_MANAGER';
+
+// Auth
+export interface CurrentUserDto {
   name: string;
-  role: UserRole;
+  role: string;
   initials: string;
   depotId?: string;
 }
 
-export interface Depot {
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: CurrentUserDto;
+}
+
+// Depots
+export interface DepotDto {
   id: string;
   name: string;
   location: string;
@@ -17,7 +31,23 @@ export interface Depot {
   status: string;
 }
 
-export interface Route {
+export interface CreateDepotRequest {
+  name: string;
+  address: string;
+  latitude?: string;
+  longitude?: string;
+}
+
+export interface UpdateDepotRequest {
+  name?: string;
+  address?: string;
+  latitude?: string;
+  longitude?: string;
+  status?: string;
+}
+
+// Routes
+export interface RouteDto {
   id: string;
   depotId: string;
   code: string;
@@ -27,7 +57,8 @@ export interface Route {
   status: string;
 }
 
-export interface DashboardSummary {
+// Dashboard
+export interface DashboardSummaryDto {
   totalRoutes: number;
   deliveriesComplete: number;
   deliveriesTotal: number;
@@ -36,7 +67,7 @@ export interface DashboardSummary {
   exceptionsCount: number;
 }
 
-export interface RouteSummary {
+export interface RouteSummaryDto {
   routeId: string;
   routeName: string;
   description: string;
@@ -50,15 +81,32 @@ export interface RouteSummary {
   progressNote?: string;
 }
 
-export interface Dashboard {
-  date: string;
-  summary: DashboardSummary;
-  routeSummary: RouteSummary[];
-  openExceptions: Array<{ orderId: string; boxesSummary: string; routeName: string }>;
-  awaitingGoods: Array<{ orderId: string; expectedBoxes: number; receivedBoxes: number }>;
+export interface ExceptionDto {
+  orderId: string;
+  boxesSummary: string;
+  routeName: string;
 }
 
-export interface DeliveryStop {
+export interface DashboardDto {
+  date: string;
+  summary: DashboardSummaryDto;
+  routeSummary: RouteSummaryDto[];
+  openExceptions: ExceptionDto[];
+  awaitingGoods: OrderAwaitingGoodsDto[];
+}
+
+// Route Drilldown
+export interface RouteStatsDto {
+  deliveriesDone: number;
+  deliveriesTotal: number;
+  boxesDone: number;
+  boxesTotal: number;
+  exceptionsCount: number;
+  lastActivity?: string;
+  lastActivityPostcode?: string;
+}
+
+export interface DeliveryStopDto {
   seq: number;
   address: string;
   postcode: string;
@@ -68,49 +116,66 @@ export interface DeliveryStop {
   hasPod: boolean;
 }
 
-export interface RouteDrilldown {
+export interface RouteDrilldownDto {
   routeName: string;
   vehicle: string;
   driver: string;
-  stats: {
-    deliveriesDone: number;
-    deliveriesTotal: number;
-    boxesDone: number;
-    boxesTotal: number;
-    exceptionsCount: number;
-    lastActivity?: string;
-    lastActivityPostcode?: string;
-  };
-  stops: DeliveryStop[];
+  stats: RouteStatsDto;
+  stops: DeliveryStopDto[];
 }
 
-export interface Box {
+// Orders
+export interface CreateOrderRequest {
+  orderId: string;
+  despatchId: string;
+  customerAddress?: string;
+  deliveryPostcode: string;
+  orderDate?: string;
+  requestedDeliveryDate?: string;
+  boxIdentifiers?: string[];
+  expectedBoxCount?: number;
+}
+
+export interface BoxDto {
   id: string;
   status: 'received' | 'pending' | 'missing';
   receivedAt?: string;
 }
 
-export interface OrderAwaitingGoods {
+export interface OrderAwaitingGoodsDto {
   orderId: string;
   customer: string;
   routeName: string;
   boxesReceived: number;
   boxesExpected: number;
-  boxes: Box[];
+  boxes: BoxDto[];
 }
 
-export interface PostcodeHierarchyLevel {
+export interface OrderDto {
+  id: string;
+  orderId: string;
+  despatchId: string;
+  customerAddress?: string;
+  deliveryPostcode: string;
+  status: string;
+  exceptionReason?: string;
+  readyForManifest?: boolean;
+}
+
+// Postcode Rules
+export interface PostcodeHierarchyLevelDto {
   level: string;
   pattern: string;
   routeName: string;
   isMatch: boolean;
 }
 
-export interface PostcodeLookup {
-  hierarchy: PostcodeHierarchyLevel[];
+export interface PostcodeLookupDto {
+  hierarchy: PostcodeHierarchyLevelDto[];
 }
 
-export interface PostcodeRule {
+export interface PostcodeRuleDto {
+  id?: string;
   pattern: string;
   level: 'full' | 'sector' | 'district' | 'area' | 'letter';
   routeId: string;
@@ -119,7 +184,16 @@ export interface PostcodeRule {
   effectiveTo?: string;
 }
 
-export interface Vehicle {
+export interface CreatePostcodeRuleRequest {
+  pattern: string;
+  level: 'full' | 'sector' | 'district' | 'area' | 'letter';
+  routeId: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+// Vehicles
+export interface VehicleDto {
   id: string;
   depotId: string;
   registration: string;
@@ -130,7 +204,8 @@ export interface Vehicle {
   status: string;
 }
 
-export interface Driver {
+// Drivers
+export interface DriverDto {
   id: string;
   depotId: string;
   name: string;
@@ -141,34 +216,71 @@ export interface Driver {
   status: string;
 }
 
-export interface ManifestStop {
+// Manifests
+export interface ManifestStopDto {
   orderId: string;
   address: string;
   boxes: number | string;
   boxStatus: string;
 }
 
-export interface Manifest {
+export interface ManifestDto {
   id: string;
   routeId: string;
   date: string;
   driverId: string;
   vehicleId: string;
   status: string;
-  stops: ManifestStop[];
+  stops: ManifestStopDto[];
 }
 
-export interface User {
+export interface CreateManifestRequest {
+  routeId: string;
+  date: string;
+  vehicleId: string;
+  driverId: string;
+  boxIds?: string[];
+}
+
+export interface UpdateManifestRequest {
+  driverId?: string;
+  vehicleId?: string;
+  date?: string;
+}
+
+export interface CreateRouteRequest {
+  code: string;
+  name: string;
+  description?: string;
+  depotId: string;
+}
+
+export interface UpdateRouteRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface UpdatePostcodeRuleRequest {
+  pattern?: string;
+  level?: 'full' | 'sector' | 'district' | 'area' | 'letter';
+  routeId?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+}
+
+// Users
+export interface UserDto {
   id: string;
   name: string;
   email: string;
-  role: UserRole | 'driver';
+  role: string;
   depotId?: string;
   lastLogin: string;
   status: string;
 }
 
-export interface AuditEvent {
+// Audit
+export interface AuditEventDto {
   timestamp: string;
   userId: string;
   userName: string;
@@ -176,19 +288,4 @@ export interface AuditEvent {
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   entityType: string;
   detail: string;
-}
-
-export interface MockApiPayload {
-  currentUser: CurrentUser;
-  depots: Depot[];
-  routes: Route[];
-  dashboard: Dashboard;
-  routeDrilldown: Record<string, RouteDrilldown>;
-  ordersAwaitingGoods: OrderAwaitingGoods[];
-  postcodeRules: PostcodeRule[];
-  vehicles: Vehicle[];
-  drivers: Driver[];
-  manifests: Manifest[];
-  users: User[];
-  auditEvents: AuditEvent[];
 }

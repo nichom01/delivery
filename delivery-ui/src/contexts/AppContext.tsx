@@ -1,60 +1,180 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getMockData } from '@/api/client';
-import type { MockApiPayload, CurrentUser, Depot } from '@/api/types';
+import { useAuth } from '@/hooks/useAuth';
+import { depotService } from '@/api/services/depotService';
+import { userService } from '@/api/services/userService';
+import { vehicleService } from '@/api/services/vehicleService';
+import { driverService } from '@/api/services/driverService';
+import { routeService } from '@/api/services/routeService';
+import type { DepotDto, CurrentUserDto, UserDto, VehicleDto, DriverDto, RouteDto } from '@/api/types';
+
+interface AppData {
+  depots: DepotDto[];
+  users: UserDto[];
+  vehicles: VehicleDto[];
+  drivers: DriverDto[];
+  routes: RouteDto[];
+}
 
 interface AppContextValue {
-  data: MockApiPayload | null;
-  currentUser: CurrentUser | null;
+  currentUser: CurrentUserDto | null;
   selectedDepotId: string | null;
   setSelectedDepotId: (depotId: string | null) => void;
-  setCurrentUser: (user: CurrentUser | null) => void;
+  depots: DepotDto[];
+  data: AppData | null;
   loading: boolean;
-  getDepotById: (id: string) => Depot | undefined;
+  getDepotById: (id: string) => DepotDto | undefined;
+  refreshDepots: () => Promise<void>;
+  refreshVehicles: () => Promise<void>;
+  refreshDrivers: () => Promise<void>;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<MockApiPayload | null>(null);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const { user, loading: authLoading, logout } = useAuth();
+  const [depots, setDepots] = useState<DepotDto[]>([]);
+  const [users, setUsers] = useState<UserDto[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleDto[]>([]);
+  const [drivers, setDrivers] = useState<DriverDto[]>([]);
+  const [routes, setRoutes] = useState<RouteDto[]>([]);
   const [selectedDepotId, setSelectedDepotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const payload = await getMockData();
-        setData(payload);
-        // Initialize with first depot if user has depotId, otherwise use first depot
-        if (payload.currentUser.depotId) {
-          setSelectedDepotId(payload.currentUser.depotId);
-        } else if (payload.depots.length > 0) {
-          setSelectedDepotId(payload.depots[0].id);
+  const loadDepots = async () => {
+    try {
+      const depotList = await depotService.getAllDepots();
+      setDepots(depotList);
+      
+      // Initialize selected depot if not set
+      if (!selectedDepotId) {
+        if (user?.depotId) {
+          setSelectedDepotId(user.depotId);
+        } else if (depotList.length > 0) {
+          setSelectedDepotId(depotList[0].id);
         }
-        setCurrentUser(payload.currentUser);
-      } catch (error) {
-        console.error('Failed to load mock data:', error);
-      } finally {
-        setLoading(false);
       }
+    } catch (error) {
+      console.error('Failed to load depots:', error);
+      // Don't throw - just log the error and continue
+      setDepots([]);
     }
-    loadData();
-  }, []);
-
-  const getDepotById = (id: string): Depot | undefined => {
-    return data?.depots.find(d => d.id === id);
   };
+
+  const loadUsers = async () => {
+    try {
+      const userList = await userService.getUsers();
+      setUsers(userList);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      // Don't throw - just log the error and continue
+      setUsers([]);
+    }
+  };
+
+  const loadVehicles = async () => {
+    try {
+      const vehicleList = await vehicleService.getVehicles();
+      setVehicles(vehicleList);
+    } catch (error) {
+      console.error('Failed to load vehicles:', error);
+      // Don't throw - just log the error and continue
+      setVehicles([]);
+    }
+  };
+
+  const loadDrivers = async () => {
+    try {
+      const driverList = await driverService.getDrivers();
+      setDrivers(driverList);
+    } catch (error) {
+      console.error('Failed to load drivers:', error);
+      // Don't throw - just log the error and continue
+      setDrivers([]);
+    }
+  };
+
+  const loadRoutes = async () => {
+    try {
+      // Load routes for all depots - we'll filter by depotId in components
+      const allRoutes: RouteDto[] = [];
+      const depotList = await depotService.getAllDepots();
+      
+      for (const depot of depotList) {
+        try {
+          const depotRoutes = await depotService.getRoutesByDepot(depot.id);
+          allRoutes.push(...depotRoutes);
+        } catch (error) {
+          console.error(`Failed to load routes for depot ${depot.id}:`, error);
+        }
+      }
+      
+      setRoutes(allRoutes);
+    } catch (error) {
+      console.error('Failed to load routes:', error);
+      // Don't throw - just log the error and continue
+      setRoutes([]);
+    }
+  };
+
+  useEffect(() => {
+    if (authLoading) {
+      // Still loading auth, wait
+      return;
+    }
+    
+    if (user) {
+      // User is authenticated, load all data
+      Promise.all([
+        loadDepots(),
+        loadUsers(),
+        loadVehicles(),
+        loadDrivers(),
+        loadRoutes()
+      ]).finally(() => setLoading(false));
+    } else {
+      // No user, just set loading to false
+      setLoading(false);
+    }
+  }, [authLoading, user]);
+
+  const getDepotById = (id: string): DepotDto | undefined => {
+    return depots.find(d => d.id === id);
+  };
+
+  const refreshDepots = async () => {
+    await loadDepots();
+    // Also refresh users in case they were affected
+    await loadUsers();
+  };
+
+  const refreshVehicles = async () => {
+    await loadVehicles();
+  };
+
+  const refreshDrivers = async () => {
+    await loadDrivers();
+  };
+
+  // Provide data object once loading is complete (even if arrays are empty)
+  const data: AppData | null = !loading && !authLoading
+    ? { depots, users, vehicles, drivers, routes }
+    : null;
 
   return (
     <AppContext.Provider
       value={{
-        data,
-        currentUser,
+        currentUser: user,
         selectedDepotId,
         setSelectedDepotId,
-        setCurrentUser,
-        loading,
+        depots,
+        data,
+        loading: loading || authLoading,
         getDepotById,
+        refreshDepots,
+        refreshVehicles,
+        refreshDrivers,
+        logout,
       }}
     >
       {children}

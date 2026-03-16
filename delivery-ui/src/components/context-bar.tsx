@@ -47,8 +47,8 @@ export function ContextBar() {
   
   if (!currentUser || !data) return null;
   
-  const roleLabel = currentUser.role === 'central_admin' ? 'Central Admin' : 'Depot Manager';
-  const avatarClass = currentUser.role === 'central_admin' ? 'bg-purple-600' : 'bg-blue-600';
+  const roleLabel = currentUser.role === 'CENTRAL_ADMIN' ? 'Central Admin' : 'Depot Manager';
+  const avatarClass = currentUser.role === 'CENTRAL_ADMIN' ? 'bg-purple-600' : 'bg-blue-600';
   
   return (
     <div className="h-[48px] bg-white border-b-2 border-gray-200 flex items-center px-5 gap-0 sticky top-0 z-100 shadow-sm">

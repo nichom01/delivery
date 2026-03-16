@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { postcodeService } from '@/api/services/postcodeService';
+import { orderService } from '@/api/services/orderService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { lookupPostcode } from '@/api/client';
+import type { PostcodeLookupDto } from '@/api/types';
 
 export default function OrderEntry() {
-  const { data, selectedDepotId, getDepotById } = useApp();
+  const { selectedDepotId, depots, getDepotById } = useApp();
+  const navigate = useNavigate();
   const [orderId, setOrderId] = useState('ORD-4521');
   const [despatchId, setDespatchId] = useState('DSP-8834');
   const [orderDate, setOrderDate] = useState('2026-03-12');
@@ -19,14 +23,32 @@ export default function OrderEntry() {
   const [postcode, setPostcode] = useState('SW8 1RT');
   const [boxCount, setBoxCount] = useState(3);
   const [boxPrefix, setBoxPrefix] = useState('BOX-DSP8834-');
-  
-  if (!data || !selectedDepotId) {
-    return <div>Loading...</div>;
-  }
+  const [lookup, setLookup] = useState<PostcodeLookupDto | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
   
   const depot = getDepotById(selectedDepotId);
-  const lookup = lookupPostcode(postcode, data.postcodeRules);
-  const matchedRoute = lookup.matchedRoute || 'Route A';
+  
+  useEffect(() => {
+    if (postcode && postcode.length >= 3) {
+      const timeoutId = setTimeout(async () => {
+        try {
+          setLookupLoading(true);
+          const result = await postcodeService.lookupPostcode(postcode);
+          setLookup(result);
+        } catch (err) {
+          console.error('Postcode lookup failed:', err);
+          setLookup(null);
+        } finally {
+          setLookupLoading(false);
+        }
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setLookup(null);
+    }
+  }, [postcode]);
+  
+  const matchedRoute = lookup?.hierarchy?.[0]?.routeName || 'Route A';
   
   return (
     <>
@@ -146,6 +168,9 @@ export default function OrderEntry() {
                 </div>
                 <div className="mb-2.5">
                   <div className="text-[11px] text-gray-500 mb-1">Hierarchy match:</div>
+                  {lookupLoading ? (
+                    <div className="text-[12px] text-gray-500">Loading...</div>
+                  ) : lookup ? (
                   <div className="border border-gray-200 rounded-md overflow-hidden">
                     {lookup.hierarchy.map((level, idx) => (
                       <div
@@ -171,6 +196,9 @@ export default function OrderEntry() {
                       </div>
                     ))}
                   </div>
+                  ) : (
+                    <div className="text-[12px] text-gray-500">Enter a postcode to see route allocation</div>
+                  )}
                 </div>
                 <div className="p-3 bg-white rounded-md border border-green-600 mb-2.5">
                   <div className="text-[11px] text-gray-500 mb-1">Allocated to:</div>
@@ -186,8 +214,43 @@ export default function OrderEntry() {
         </div>
         
         <div className="flex justify-end gap-2.5 mt-4">
-          <Button variant="outline" size="sm">Clear</Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <Button variant="outline" size="sm" onClick={() => {
+            setOrderId('');
+            setDespatchId('');
+            setCustomerName('');
+            setAddress1('');
+            setAddress2('');
+            setTown('');
+            setPostcode('');
+            setBoxCount(0);
+            setBoxPrefix('');
+            setLookup(null);
+          }}>Clear</Button>
+          <Button 
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={async () => {
+              try {
+                const customerAddress = [address1, address2, town].filter(Boolean).join(', ');
+                const boxIdentifiers = Array.from({ length: boxCount }, (_, i) => `${boxPrefix}${String(i + 1).padStart(3, '0')}`);
+                
+                await orderService.createOrder({
+                  orderId,
+                  despatchId,
+                  customerAddress,
+                  deliveryPostcode: postcode,
+                  orderDate,
+                  requestedDeliveryDate: deliveryDate,
+                  boxIdentifiers,
+                  expectedBoxCount: boxCount,
+                });
+                
+                navigate('/dashboard');
+              } catch (err) {
+                alert(err instanceof Error ? err.message : 'Failed to create order');
+              }
+            }}
+          >
             Submit Order →
           </Button>
         </div>

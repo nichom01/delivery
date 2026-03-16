@@ -14,13 +14,19 @@ import Depots from './pages/Depots';
 import Users from './pages/Users';
 import AuditLog from './pages/AuditLog';
 import NotMatch from './pages/NotMatch';
-import { useApp } from './contexts/AppContext';
+import { useAuth } from './hooks/useAuth';
 
 function ProtectedLayout() {
-  const { currentUser } = useApp();
-  if (!currentUser) {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+  
   return <DeliverOpsLayout />;
 }
 

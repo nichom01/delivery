@@ -1,24 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function Login() {
-  const [email, setEmail] = useState('j.smith@depot-london.co.uk');
-  const [password, setPassword] = useState('••••••••');
+  const [username, setUsername] = useState('depot1');
+  const [password, setPassword] = useState('password');
   const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setCurrentUser, data } = useApp();
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - set user from data
-    if (data) {
-      setCurrentUser(data.currentUser);
-      navigate('/dashboard');
+    setError(null);
+    setLoading(true);
+    
+    try {
+      await login(username, password);
+      // Navigation is handled by useAuth hook
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,13 +42,14 @@ export default function Login() {
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="flex flex-col gap-1">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="text-[12.5px]"
+              placeholder="admin, depot1, depot2, etc."
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -67,11 +76,15 @@ export default function Login() {
               Forgot password?
             </span>
           </div>
+          {error && (
+            <div className="text-red-600 text-sm text-center">{error}</div>
+          )}
           <Button
             type="submit"
+            disabled={loading}
             className="w-full justify-center py-2.5 text-[14px] mt-0.5 bg-blue-600 hover:bg-blue-700"
           >
-            Sign In →
+            {loading ? 'Signing in...' : 'Sign In →'}
           </Button>
           <div className="text-center text-[11px] text-gray-400">
             Contact your system administrator if you need access

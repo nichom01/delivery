@@ -13,6 +13,7 @@ import {
   Building2,
   Users,
   FileSearch,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,13 +35,13 @@ const systemMenuItems = [
 ];
 
 export function DeliverOpsSidebar() {
-  const { currentUser } = useApp();
+  const { currentUser, logout } = useApp();
   const location = useLocation();
-  const isAdmin = currentUser?.role === 'central_admin';
+  const isAdmin = currentUser?.role === 'CENTRAL_ADMIN';
   
   if (!currentUser) return null;
   
-  const avatarClass = currentUser.role === 'central_admin' ? 'bg-purple-600' : 'bg-blue-600';
+  const avatarClass = currentUser.role === 'CENTRAL_ADMIN' ? 'bg-purple-600' : 'bg-blue-600';
   
   return (
     <div className="w-[224px] bg-[var(--navy)] text-white flex flex-col shrink-0 sticky top-[48px] h-[calc(100vh-48px)] overflow-y-auto">
@@ -114,18 +115,27 @@ export function DeliverOpsSidebar() {
       )}
       
       {/* Sidebar User */}
-      <div className="mt-auto px-3.5 py-3 border-t border-white/8 flex items-center gap-2">
-        <Avatar className={`w-7 h-7 ${avatarClass}`}>
-          <AvatarFallback className={`text-[11px] font-bold text-white ${avatarClass}`}>
-            {currentUser.initials}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="text-[12px] text-white font-medium">{currentUser.name}</div>
-          <div className="text-[10px] text-gray-400">
-            {currentUser.role === 'central_admin' ? 'Central Admin' : 'Depot Manager'}
+      <div className="mt-auto border-t border-white/8">
+        <div className="px-3.5 py-3 flex items-center gap-2">
+          <Avatar className={`w-7 h-7 ${avatarClass}`}>
+            <AvatarFallback className={`text-[11px] font-bold text-white ${avatarClass}`}>
+              {currentUser.initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="text-[12px] text-white font-medium">{currentUser.name}</div>
+            <div className="text-[10px] text-gray-400">
+              {currentUser.role === 'CENTRAL_ADMIN' ? 'Central Admin' : 'Depot Manager'}
+            </div>
           </div>
         </div>
+        <button
+          onClick={logout}
+          className="w-full px-3.5 py-2 mx-2 mb-2 rounded-md flex items-center gap-2 text-[12.5px] text-gray-400 hover:bg-white/7 hover:text-gray-300 transition-all"
+        >
+          <LogOut className="w-[17px] text-center shrink-0" />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

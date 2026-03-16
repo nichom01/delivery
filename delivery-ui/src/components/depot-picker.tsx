@@ -11,7 +11,7 @@ export function DepotPicker() {
   
   if (!currentUser || !data) return null;
   
-  const isLocked = currentUser.role === 'depot_manager';
+  const isLocked = currentUser.role === 'DEPOT_MANAGER';
   const selectedDepot = selectedDepotId ? getDepotById(selectedDepotId) : null;
   
   if (isLocked && selectedDepot) {

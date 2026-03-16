@@ -1,16 +1,22 @@
 package com.deliverysystem.controller.api.v1;
 
+import com.deliverysystem.domain.Box;
 import com.deliverysystem.domain.Order;
 import com.deliverysystem.domain.User;
 import com.deliverysystem.dto.ApiResponse;
 import com.deliverysystem.dto.CreateOrderRequest;
+import com.deliverysystem.dto.FlagExceptionRequest;
+import com.deliverysystem.dto.OrderAwaitingGoodsDto;
 import com.deliverysystem.dto.RouteDto;
 import com.deliverysystem.repository.UserRepository;
 import com.deliverysystem.security.JwtTokenProvider;
+import com.deliverysystem.service.DashboardService;
 import com.deliverysystem.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -19,11 +25,13 @@ public class OrderController {
     private final OrderService orderService;
     private final UserRepository userRepository;
     private final JwtTokenProvider tokenProvider;
+    private final DashboardService dashboardService;
     
-    public OrderController(OrderService orderService, UserRepository userRepository, JwtTokenProvider tokenProvider) {
+    public OrderController(OrderService orderService, UserRepository userRepository, JwtTokenProvider tokenProvider, DashboardService dashboardService) {
         this.orderService = orderService;
         this.userRepository = userRepository;
         this.tokenProvider = tokenProvider;
+        this.dashboardService = dashboardService;
     }
     
     @PostMapping
@@ -56,5 +64,60 @@ public class OrderController {
         routeDto.setDepotId(order.getRoute().getDepot().getId());
         
         return ResponseEntity.ok(ApiResponse.success("Order created successfully", routeDto));
+    }
+    
+    @GetMapping("/awaiting-goods")
+    public ResponseEntity<ApiResponse<List<OrderAwaitingGoodsDto>>> getOrdersAwaitingGoods(
+            @RequestParam(required = false) String depotId) {
+        
+        List<OrderAwaitingGoodsDto> orders = dashboardService.getOrdersAwaitingGoods(depotId);
+        
+        return ResponseEntity.ok(ApiResponse.success(orders));
+    }
+    
+    @PostMapping("/boxes/{boxId}/receive")
+    public ResponseEntity<ApiResponse<Box>> receiveBox(
+            @PathVariable String boxId,
+            @RequestHeader("Authorization") String authHeader) {
+        
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        Box box = orderService.receiveBox(boxId, user);
+        
+        return ResponseEntity.ok(ApiResponse.success("Box received successfully", box));
+    }
+    
+    @PostMapping("/{orderId}/flag-exception")
+    public ResponseEntity<ApiResponse<Order>> flagException(
+            @PathVariable String orderId,
+            @Valid @RequestBody FlagExceptionRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        Order order = orderService.flagException(orderId, request.getReason(), user);
+        
+        return ResponseEntity.ok(ApiResponse.success("Order flagged with exception", order));
+    }
+    
+    @PostMapping("/{orderId}/ready-for-manifest")
+    public ResponseEntity<ApiResponse<Order>> markReadyForManifest(
+            @PathVariable String orderId,
+            @RequestHeader("Authorization") String authHeader) {
+        
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        Order order = orderService.markReadyForManifest(orderId, user);
+        
+        return ResponseEntity.ok(ApiResponse.success("Order marked as ready for manifest", order));
     }
 }

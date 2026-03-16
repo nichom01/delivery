@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depot API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Depot API Test Page</h1>
+        <p>Use this page to test depot creation and update operations.</p>
+        
+        <div class="test-section">
+            <h2>1. Get Auth Token</h2>
+            <label>Username:</label>
+            <input type="text" id="username" value="admin" />
+            <label>Password:</label>
+            <input type="password" id="password" value="password" />
+            <button onclick="login()">Login</button>
+            <div id="loginResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Create Depot</h2>
+            <label>Depot Name:</label>
+            <input type="text" id="createName" value="Test Depot" />
+            <label>Address:</label>
+            <input type="text" id="createAddress" value="123 Test Street" />
+            <label>Latitude (optional):</label>
+            <input type="text" id="createLatitude" value="" />
+            <label>Longitude (optional):</label>
+            <input type="text" id="createLongitude" value="" />
+            <button onclick="createDepot()">Create Depot</button>
+            <div id="createResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Update Depot</h2>
+            <label>Depot ID:</label>
+            <input type="text" id="updateId" value="depot-1" />
+            <label>New Name:</label>
+            <input type="text" id="updateName" value="Updated Depot" />
+            <label>New Address:</label>
+            <input type="text" id="updateAddress" value="456 Updated Street" />
+            <button onclick="updateDepot()">Update Depot</button>
+            <div id="updateResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Get All Depots</h2>
+            <button onclick="getAllDepots()">Get All Depots</button>
+            <div id="getAllResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+        let authToken = localStorage.getItem('testAuthToken') || '';
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+                resultDiv.style.display = 'block';
+                
+                if (data.success && data.data && data.data.token) {
+                    authToken = data.data.token;
+                    localStorage.setItem('testAuthToken', authToken);
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Login successful!\nToken: ${authToken.substring(0, 20)}...`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Login failed:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+
+        async function createDepot() {
+            const name = document.getElementById('createName').value;
+            const address = document.getElementById('createAddress').value;
+            const latitude = document.getElementById('createLatitude').value;
+            const longitude = document.getElementById('createLongitude').value;
+            const resultDiv = document.getElementById('createResult');
+            
+            if (!authToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please login first!';
+                return;
+            }
+
+            const requestBody = {
+                name: name.trim(),
+                address: address.trim(),
+            };
+            
+            if (latitude.trim()) {
+                requestBody.latitude = latitude.trim();
+            }
+            if (longitude.trim()) {
+                requestBody.longitude = longitude.trim();
+            }
+
+            try {
+                console.log('Creating depot with request:', requestBody);
+                console.log('Auth token:', authToken ? 'Present' : 'Missing');
+                
+                const response = await fetch(`${API_BASE_URL}/depots`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Failed to parse JSON response:\nStatus: ${response.status}\nResponse: ${responseText}`;
+                    return;
+                }
+
+                resultDiv.style.display = 'block';
+                
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Depot created successfully!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Failed to create depot:\nStatus: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}\n${error.stack}`;
+                console.error('Create depot error:', error);
+            }
+        }
+
+        async function updateDepot() {
+            const depotId = document.getElementById('updateId').value;
+            const name = document.getElementById('updateName').value;
+            const address = document.getElementById('updateAddress').value;
+            const resultDiv = document.getElementById('updateResult');
+            
+            if (!authToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please login first!';
+                return;
+            }
+
+            const requestBody = {
+                name: name.trim(),
+                address: address.trim(),
+            };
+
+            try {
+                console.log('Updating depot with request:', requestBody);
+                
+                const response = await fetch(`${API_BASE_URL}/depots/${depotId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                console.log('Response status:', response.status);
+                
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Failed to parse JSON response:\nStatus: ${response.status}\nResponse: ${responseText}`;
+                    return;
+                }
+
+                resultDiv.style.display = 'block';
+                
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Depot updated successfully!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Failed to update depot:\nStatus: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}\n${error.stack}`;
+                console.error('Update depot error:', error);
+            }
+        }
+
+        async function getAllDepots() {
+            const resultDiv = document.getElementById('getAllResult');
+            
+            if (!authToken) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please login first!';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/depots`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+
+                const data = await response.json();
+                resultDiv.style.display = 'block';
+                
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Found ${data.data.length} depots:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Failed to get depots:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Auto-login on page load if token exists
+        if (authToken) {
+            console.log('Found existing token, ready to test');
+        }
+    </script>
+</body>
+</html>

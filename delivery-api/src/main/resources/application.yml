@@ -47,3 +47,7 @@ api:
   version: v1
   base-path: /api/v1
   key: ${API_KEY:}
+
+application:
+  seed:
+    enabled: ${SEED_ENABLED:true}

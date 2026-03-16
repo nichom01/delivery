@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { dashboardService } from '@/api/services/dashboardService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import type { DashboardDto } from '@/api/types';
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: 'blue' | 'green' | 'amber' | 'red' }) {
   return (
@@ -25,14 +28,43 @@ function ProgressBar({ percentage, color }: { percentage: number; color: 'green'
 }
 
 export default function Dashboard() {
-  const { data, selectedDepotId, getDepotById } = useApp();
+  const { selectedDepotId, depots, getDepotById } = useApp();
+  const [dashboard, setDashboard] = useState<DashboardDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  if (!data || !selectedDepotId) {
-    return <div>Loading...</div>;
+  useEffect(() => {
+    if (!selectedDepotId) {
+      setLoading(false);
+      return;
+    }
+    
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dashboardService.getDashboard(selectedDepotId, selectedDate);
+        setDashboard(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadDashboard();
+  }, [selectedDepotId, selectedDate]);
+  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (error || !dashboard || !selectedDepotId) {
+    return <div className="flex items-center justify-center min-h-screen text-red-600">{error || 'No depot selected'}</div>;
   }
   
   const depot = getDepotById(selectedDepotId);
-  const dashboard = data.dashboard;
   const today = new Date(dashboard.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   
   const deliveryPercentage = dashboard.summary.deliveriesTotal > 0
@@ -53,7 +85,8 @@ export default function Dashboard() {
         </div>
         <input
           type="date"
-          defaultValue={dashboard.date}
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
           className="text-[12px] px-2 py-1 border border-gray-300 rounded"
         />
         <Button variant="outline" size="sm" className="text-[12px]">
@@ -263,19 +296,19 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {dashboard.awaitingGoods.map((order) => {
-                    const badgeColor = order.receivedBoxes === order.expectedBoxes ? 'green' :
-                      order.receivedBoxes === 0 ? 'red' : 'amber';
+                    const badgeColor = order.boxesReceived === order.boxesExpected ? 'green' :
+                      order.boxesReceived === 0 ? 'red' : 'amber';
                     return (
                       <tr key={order.orderId} className="hover:bg-gray-50">
                         <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 font-mono">
                           {order.orderId}
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
-                          {order.expectedBoxes}
+                          {order.boxesExpected}
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100">
                           <Badge className={`badge-${badgeColor}`}>
-                            {order.receivedBoxes} / {order.expectedBoxes}
+                            {order.boxesReceived} / {order.boxesExpected}
                           </Badge>
                         </td>
                       </tr>

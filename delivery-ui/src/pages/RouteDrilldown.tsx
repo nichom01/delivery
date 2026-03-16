@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { routeService } from '@/api/services/routeService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import type { RouteDrilldownDto } from '@/api/types';
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: 'blue' | 'green' | 'amber' | 'red' }) {
   return (
@@ -19,21 +22,44 @@ function StatCard({ label, value, sub, color }: { label: string; value: string |
 
 export default function RouteDrilldown() {
   const { routeId } = useParams();
-  const { data, selectedDepotId, getDepotById } = useApp();
+  const { selectedDepotId, depots, getDepotById } = useApp();
+  const [routeData, setRouteData] = useState<RouteDrilldownDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  if (!data || !routeId || !selectedDepotId) {
-    return <div>Loading...</div>;
+  useEffect(() => {
+    if (!routeId) {
+      setLoading(false);
+      return;
+    }
+    
+    const loadRouteDrilldown = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await routeService.getRouteDrilldown(routeId, selectedDate);
+        setRouteData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load route drilldown');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadRouteDrilldown();
+  }, [routeId, selectedDate]);
+  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (error || !routeData || !selectedDepotId) {
+    return <div className="flex items-center justify-center min-h-screen text-red-600">{error || 'Route not found'}</div>;
   }
   
   const depot = getDepotById(selectedDepotId);
-  const routeData = data.routeDrilldown[routeId];
-  
-  if (!routeData) {
-    return <div>Route not found</div>;
-  }
-  
-  const route = data.routes.find(r => r.id === routeId);
-  const today = new Date(data.dashboard.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const today = new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   
   const delPct = routeData.stats.deliveriesTotal > 0
     ? Math.round((routeData.stats.deliveriesDone / routeData.stats.deliveriesTotal) * 100)
