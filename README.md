@@ -109,32 +109,55 @@ DeliverySystem/
 
 ### Prerequisites
 
+- **Docker** and **Docker Compose** (for database)
 - **Java 21** (for backend)
 - **Node.js 18+** (for frontend)
-- **PostgreSQL 12+** (or Docker)
 - **Maven 3.8+** (for backend)
 - **npm** or **yarn** (for frontend)
 
-### 1. Clone the Repository
+### Option 1: Using Setup Scripts (Recommended)
+
+```bash
+# Clone the repository
+git clone git@github.com:nichom01/delivery.git
+cd delivery
+
+# Run setup script (checks prerequisites, installs dependencies)
+./local/setup.sh
+
+# Start everything
+./local/start-all.sh
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **Database**: localhost:5432
+
+See [local/README.md](local/README.md) for detailed script documentation.
+
+### Option 2: Manual Setup
+
+#### 1. Clone the Repository
 
 ```bash
 git clone git@github.com:nichom01/delivery.git
 cd delivery
 ```
 
-### 2. Set Up Backend
+#### 2. Start Database
+
+```bash
+docker-compose up -d
+```
+
+#### 3. Set Up Backend
 
 ```bash
 cd delivery-api
 
 # Set Java 21 (macOS)
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-
-# Create PostgreSQL database
-createdb deliverysystem
-
-# Update application.yml with your database credentials
-# Edit src/main/resources/application.yml
 
 # Build and run
 mvn clean install
@@ -143,7 +166,7 @@ mvn spring-boot:run
 
 The API will be available at `http://localhost:8080`
 
-### 3. Set Up Frontend
+#### 4. Set Up Frontend
 
 ```bash
 cd delivery-ui
@@ -159,11 +182,15 @@ The UI will be available at `http://localhost:5173`
 
 ### 4. Configure API Connection
 
-Update the frontend API configuration to point to your backend:
+Create `.env` file in `delivery-ui/`:
 
-```typescript
-// delivery-ui/src/api/client.ts
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+```bash
+echo "VITE_API_BASE_URL=http://localhost:8080/api/v1" > delivery-ui/.env
+```
+
+Or manually create `.env` with:
+```
+VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
 
 ## Key Features
