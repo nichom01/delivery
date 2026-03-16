@@ -4,6 +4,7 @@ import com.deliverysystem.domain.Box;
 import com.deliverysystem.domain.Order;
 import com.deliverysystem.domain.User;
 import com.deliverysystem.dto.ApiResponse;
+import com.deliverysystem.dto.BoxDto;
 import com.deliverysystem.dto.CreateOrderRequest;
 import com.deliverysystem.dto.FlagExceptionRequest;
 import com.deliverysystem.dto.OrderAwaitingGoodsDto;
@@ -76,7 +77,7 @@ public class OrderController {
     }
     
     @PostMapping("/boxes/{boxId}/receive")
-    public ResponseEntity<ApiResponse<Box>> receiveBox(
+    public ResponseEntity<ApiResponse<BoxDto>> receiveBox(
             @PathVariable String boxId,
             @RequestHeader("Authorization") String authHeader) {
         
@@ -86,8 +87,33 @@ public class OrderController {
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
         Box box = orderService.receiveBox(boxId, user);
+        BoxDto boxDto = toBoxDto(box);
         
-        return ResponseEntity.ok(ApiResponse.success("Box received successfully", box));
+        return ResponseEntity.ok(ApiResponse.success("Box received successfully", boxDto));
+    }
+    
+    /**
+     * Convert Box entity to BoxDto
+     */
+    private BoxDto toBoxDto(Box box) {
+        BoxDto dto = new BoxDto();
+        dto.setId(box.getId());
+        
+        // Convert status enum to string format expected by frontend
+        String status = box.getStatus().name().toLowerCase();
+        if (status.equals("received") || status.equals("manifested")) {
+            dto.setStatus("received");
+        } else if (status.equals("expected")) {
+            dto.setStatus("pending");
+        } else {
+            dto.setStatus("missing");
+        }
+        
+        if (box.getReceivedAt() != null) {
+            dto.setReceivedAt(box.getReceivedAt().toString());
+        }
+        
+        return dto;
     }
     
     @PostMapping("/{orderId}/flag-exception")

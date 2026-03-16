@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { manifestService } from '@/api/services/manifestService';
 import { depotService } from '@/api/services/depotService';
@@ -10,19 +10,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import type { ManifestDto, RouteDto, VehicleDto, DriverDto } from '@/api/types';
+import type { ManifestDto, RouteDto, VehicleDto, DriverDto, ManifestStopDto } from '@/api/types';
 
 export default function ManifestBuilder() {
   const { manifestId } = useParams();
+  const [searchParams] = useSearchParams();
+  const routeIdFromUrl = searchParams.get('routeId');
   const { selectedDepotId, getDepotById } = useApp();
   const [manifests, setManifests] = useState<ManifestDto[]>([]);
   const [routes, setRoutes] = useState<RouteDto[]>([]);
   const [vehicles, setVehicles] = useState<VehicleDto[]>([]);
   const [drivers, setDrivers] = useState<DriverDto[]>([]);
+  const [routeStops, setRouteStops] = useState<ManifestStopDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [routeId, setRouteId] = useState('');
   const [driverId, setDriverId] = useState('');
   const [vehicleId, setVehicleId] = useState('');
   const [date, setDate] = useState('');
@@ -59,21 +63,89 @@ export default function ManifestBuilder() {
   }, [selectedDepotId]);
   
   // Compute manifest based on manifests array and manifestId
+  // Only set manifest if we're editing a specific manifest (manifestId is provided)
+  // If no manifestId, allow creating a new manifest for any route
   const manifest = manifestId
     ? manifests.find(m => m.id === manifestId)
-    : manifests[0];
+    : null;
   
-  // Initialize form values when manifest loads
+  // Initialize form values when manifest loads or when routes are available
   useEffect(() => {
     if (manifest) {
+      setRouteId(manifest.routeId);
       setDriverId(manifest.driverId);
       setVehicleId(manifest.vehicleId);
       setDate(manifest.date);
+    } else if (routes.length > 0 && !manifest) {
+      // Initialize route and date if no manifest exists
+      // Always prioritize routeId from URL query parameter if provided and valid
+      if (routeIdFromUrl) {
+        const routeExists = routes.find(r => r.id === routeIdFromUrl);
+        if (routeExists) {
+          setRouteId(routeIdFromUrl);
+        } else if (!routeId) {
+          // If URL route doesn't exist, fall back to first route
+          setRouteId(routes[0].id);
+        }
+      } else if (!routeId && routes.length > 0) {
+        // No URL parameter, use first route
+        setRouteId(routes[0].id);
+      }
+      if (!date) {
+        setDate(new Date().toISOString().split('T')[0]);
+      }
     }
-  }, [manifest]);
+  }, [manifest, routes, routeIdFromUrl]);
+  
+  // Fetch route stops when routeId is selected but no manifest exists
+  useEffect(() => {
+    if (!manifest && routeId && routes.length > 0) {
+      const loadRouteStops = async () => {
+        try {
+          const stops = await manifestService.getRouteStops(routeId);
+          setRouteStops(stops);
+        } catch (err) {
+          console.error('Failed to load route stops:', err);
+          setRouteStops([]);
+        }
+      };
+      loadRouteStops();
+    } else {
+      setRouteStops([]);
+    }
+  }, [manifest, routeId, routes]);
   
   const handleSaveDraft = async () => {
-    if (!manifest) return;
+    // If no manifest exists, create one
+    if (!manifest) {
+      if (!routeId || !driverId || !vehicleId || !date) {
+        setError('Please select a route, driver, vehicle, and date');
+        return;
+      }
+      
+      try {
+        setSaving(true);
+        setError(null);
+        setSuccessMessage(null);
+        
+        const newManifest = await manifestService.createManifest({
+          routeId: routeId,
+          date: date,
+          driverId: driverId,
+          vehicleId: vehicleId
+        });
+        
+        setSuccessMessage('Manifest created successfully');
+        // Reload manifests
+        const updatedManifests = await manifestService.getManifests(selectedDepotId);
+        setManifests(updatedManifests);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create manifest');
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     
     try {
       setSaving(true);
@@ -153,11 +225,17 @@ export default function ManifestBuilder() {
     }
   };
 
-  const route = manifest ? routes.find(r => r.id === manifest.routeId) : null;
-  const driver = manifest ? drivers.find(d => d.id === manifest.driverId) : null;
-  const vehicle = manifest ? vehicles.find(v => v.id === manifest.vehicleId) : null;
+  const route = routes.find(r => r.id === (manifest?.routeId || routeId));
+  const driver = manifest ? drivers.find(d => d.id === manifest.driverId) : (driverId ? drivers.find(d => d.id === driverId) : null);
+  const vehicle = manifest ? vehicles.find(v => v.id === manifest.vehicleId) : (vehicleId ? vehicles.find(v => v.id === vehicleId) : null);
 
   const depot = selectedDepotId ? getDepotById(selectedDepotId) : null;
+  
+  // Determine if form should be enabled (no manifest or manifest is DRAFT)
+  const isFormEnabled = !manifest || manifest.status === 'DRAFT';
+  
+  // Get stops to display - use manifest stops if manifest exists, otherwise use route stops
+  const stopsToDisplay = manifest?.stops || routeStops;
   
   if (loading) {
     return <div className="p-5">Loading...</div>;
@@ -192,15 +270,15 @@ export default function ManifestBuilder() {
           variant="outline" 
           size="sm"
           onClick={handleSaveDraft}
-          disabled={saving || manifest?.status !== 'DRAFT'}
+          disabled={saving || !isFormEnabled}
         >
-          {saving ? 'Saving...' : 'Save Draft'}
+          {saving ? 'Saving...' : manifest ? 'Save Draft' : 'Create Manifest'}
         </Button>
         <Button 
           size="sm" 
           className="bg-green-600 hover:bg-green-700"
           onClick={handleConfirmManifest}
-          disabled={saving || manifest?.status !== 'DRAFT'}
+          disabled={saving || !manifest || manifest.status !== 'DRAFT'}
         >
           ✓ Confirm Manifest
         </Button>
@@ -221,16 +299,31 @@ export default function ManifestBuilder() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-3.5">
                   <div className="flex flex-col gap-1">
-                    <Label className="text-[11px]">Route</Label>
-                    <Input value={route?.name || ''} disabled />
+                    <Label className="text-[11px]">Route *</Label>
+                    {manifest ? (
+                      <Input value={route?.name || ''} disabled />
+                    ) : (
+                      <select 
+                        className="px-2.5 py-1.5 border border-gray-300 rounded text-[12.5px]"
+                        value={routeId || ''}
+                        onChange={(e) => setRouteId(e.target.value)}
+                      >
+                        <option value="">Select a route</option>
+                        {routes.map(r => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <Label className="text-[11px]">Delivery Date</Label>
                     <Input 
                       type="date" 
-                      value={date || manifest?.date || ''} 
+                      value={date || manifest?.date || new Date().toISOString().split('T')[0]} 
                       onChange={(e) => setDate(e.target.value)}
-                      disabled={manifest?.status !== 'DRAFT'}
+                      disabled={!isFormEnabled}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -239,8 +332,9 @@ export default function ManifestBuilder() {
                       className="px-2.5 py-1.5 border border-gray-300 rounded text-[12.5px]"
                       value={driverId || manifest?.driverId || ''}
                       onChange={(e) => setDriverId(e.target.value)}
-                      disabled={manifest?.status !== 'DRAFT'}
+                      disabled={!isFormEnabled}
                     >
+                      <option value="">Select a driver</option>
                       {drivers.map(d => (
                         <option key={d.id} value={d.id}>
                           {d.name}
@@ -254,8 +348,9 @@ export default function ManifestBuilder() {
                       className="px-2.5 py-1.5 border border-gray-300 rounded text-[12.5px]"
                       value={vehicleId || manifest?.vehicleId || ''}
                       onChange={(e) => setVehicleId(e.target.value)}
-                      disabled={manifest?.status !== 'DRAFT'}
+                      disabled={!isFormEnabled}
                     >
+                      <option value="">Select a vehicle</option>
                       {vehicles.map(v => (
                         <option key={v.id} value={v.id}>
                           {v.registration} — {v.makeModel}
@@ -273,9 +368,16 @@ export default function ManifestBuilder() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-[13.5px]">
-                  Delivery Stops ({manifest?.stops.length || 18})
+                  Delivery Stops ({stopsToDisplay.length})
                 </CardTitle>
-                <div className="text-[11px] text-gray-500">94 boxes to load</div>
+                <div className="text-[11px] text-gray-500">
+                  {stopsToDisplay.length > 0 
+                    ? `${stopsToDisplay.reduce((sum, stop) => {
+                        const boxes = typeof stop.boxes === 'number' ? stop.boxes : parseInt(String(stop.boxes).split(' ')[0]) || 0;
+                        return sum + boxes;
+                      }, 0)} boxes to load`
+                    : 'No boxes to load'}
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <table className="w-full border-collapse">
@@ -297,40 +399,48 @@ export default function ManifestBuilder() {
                     </tr>
                   </thead>
                   <tbody>
-                    {manifest?.stops.map((stop) => {
-                      const isPartial = typeof stop.boxes === 'string' && stop.boxes.includes('of');
-                      return (
-                        <tr
-                          key={stop.orderId}
-                          className={`hover:bg-gray-50 ${isPartial ? 'bg-amber-50' : ''}`}
-                        >
-                          <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 font-mono">
-                            {stop.orderId}
-                          </td>
-                          <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
-                            {stop.address}
-                          </td>
-                          <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
-                            {stop.boxes}
-                          </td>
-                          <td className="px-3.5 py-2 border-b border-gray-100">
-                            <Badge variant={stop.boxStatus.includes('Part') ? 'amber' : 'green'}>
-                              {stop.boxStatus}
-                            </Badge>
-                          </td>
-                          <td className="px-3.5 py-2 border-b border-gray-100">
-                            {manifest?.status === 'DRAFT' && (
-                              <span 
-                                className="text-blue-600 hover:underline text-[12px] cursor-pointer"
-                                onClick={() => handleRemoveStop(stop.orderId)}
-                              >
-                                Remove
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {stopsToDisplay.length > 0 ? (
+                      stopsToDisplay.map((stop) => {
+                        const isPartial = typeof stop.boxes === 'string' && stop.boxes.includes('of');
+                        return (
+                          <tr
+                            key={stop.orderId}
+                            className={`hover:bg-gray-50 ${isPartial ? 'bg-amber-50' : ''}`}
+                          >
+                            <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 font-mono">
+                              {stop.orderId}
+                            </td>
+                            <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
+                              {stop.address}
+                            </td>
+                            <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
+                              {stop.boxes}
+                            </td>
+                            <td className="px-3.5 py-2 border-b border-gray-100">
+                              <Badge variant={stop.boxStatus.includes('Part') ? 'amber' : 'green'}>
+                                {stop.boxStatus}
+                              </Badge>
+                            </td>
+                            <td className="px-3.5 py-2 border-b border-gray-100">
+                              {manifest?.status === 'DRAFT' && (
+                                <span 
+                                  className="text-blue-600 hover:underline text-[12px] cursor-pointer"
+                                  onClick={() => handleRemoveStop(stop.orderId)}
+                                >
+                                  Remove
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-3.5 py-8 text-center text-[12.5px] text-gray-500">
+                          {manifest ? 'No orders with received boxes found for this route' : routeId ? 'No orders with received boxes found for this route' : 'Select a route to see orders with received boxes'}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </CardContent>

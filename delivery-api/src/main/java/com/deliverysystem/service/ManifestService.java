@@ -3,6 +3,7 @@ package com.deliverysystem.service;
 import com.deliverysystem.domain.Box;
 import com.deliverysystem.domain.Driver;
 import com.deliverysystem.domain.Manifest;
+import com.deliverysystem.domain.Order;
 import com.deliverysystem.domain.Route;
 import com.deliverysystem.domain.User;
 import com.deliverysystem.domain.Vehicle;
@@ -10,6 +11,7 @@ import com.deliverysystem.dto.CreateManifestRequest;
 import com.deliverysystem.repository.BoxRepository;
 import com.deliverysystem.repository.DriverRepository;
 import com.deliverysystem.repository.ManifestRepository;
+import com.deliverysystem.repository.OrderRepository;
 import com.deliverysystem.repository.RouteRepository;
 import com.deliverysystem.repository.VehicleRepository;
 import org.slf4j.Logger;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,14 +34,16 @@ public class ManifestService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final BoxRepository boxRepository;
+    private final OrderRepository orderRepository;
     private final AuditService auditService;
     
-    public ManifestService(ManifestRepository manifestRepository, RouteRepository routeRepository, VehicleRepository vehicleRepository, DriverRepository driverRepository, BoxRepository boxRepository, AuditService auditService) {
+    public ManifestService(ManifestRepository manifestRepository, RouteRepository routeRepository, VehicleRepository vehicleRepository, DriverRepository driverRepository, BoxRepository boxRepository, OrderRepository orderRepository, AuditService auditService) {
         this.manifestRepository = manifestRepository;
         this.routeRepository = routeRepository;
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
         this.boxRepository = boxRepository;
+        this.orderRepository = orderRepository;
         this.auditService = auditService;
     }
     
@@ -162,7 +167,7 @@ public class ManifestService {
     }
     
     @Transactional
-    public Manifest removeStopFromManifest(String manifestId, String orderId, User user) {
+    public Manifest removeStopFromManifest(String manifestId, String businessOrderId, User user) {
         Manifest manifest = manifestRepository.findById(manifestId)
             .orElseThrow(() -> new IllegalArgumentException("Manifest not found: " + manifestId));
         
@@ -170,14 +175,28 @@ public class ManifestService {
             throw new IllegalStateException("Manifest is not in DRAFT status. Only DRAFT manifests can be modified.");
         }
         
-        // Find all boxes for this order that are assigned to this manifest
-        List<Box> boxes = boxRepository.findByOrderId(orderId);
-        List<Box> boxesToRemove = boxes.stream()
-            .filter(box -> box.getManifest() != null && box.getManifest().getId().equals(manifestId))
+        // Find orders on this route with the business orderId
+        String routeId = manifest.getRoute().getId();
+        List<Order> orders = orderRepository.findByRouteId(routeId).stream()
+            .filter(order -> order.getOrderId().equals(businessOrderId))
             .toList();
         
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("Order " + businessOrderId + " not found on route for manifest " + manifestId);
+        }
+        
+        // Find all boxes for these orders that are assigned to this manifest
+        List<Box> boxesToRemove = new ArrayList<>();
+        for (Order order : orders) {
+            List<Box> boxes = boxRepository.findByOrderId(order.getId());
+            List<Box> manifestBoxes = boxes.stream()
+                .filter(box -> box.getManifest() != null && box.getManifest().getId().equals(manifestId))
+                .toList();
+            boxesToRemove.addAll(manifestBoxes);
+        }
+        
         if (boxesToRemove.isEmpty()) {
-            throw new IllegalArgumentException("Order " + orderId + " is not assigned to manifest " + manifestId);
+            throw new IllegalArgumentException("Order " + businessOrderId + " has no boxes assigned to manifest " + manifestId);
         }
         
         // Unassign boxes from manifest
@@ -194,9 +213,9 @@ public class ManifestService {
         String depotId = manifest.getRoute().getDepot() != null ? 
             manifest.getRoute().getDepot().getId() : null;
         auditService.logUpdate(user, "Manifest", manifest.getId(), depotId, 
-            "Order " + orderId + " included", "Order " + orderId + " removed");
+            "Order " + businessOrderId + " included", "Order " + businessOrderId + " removed");
         
-        log.info("Removed order {} from manifest {}", orderId, manifestId);
+        log.info("Removed order {} from manifest {}", businessOrderId, manifestId);
         
         return manifest;
     }

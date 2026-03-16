@@ -176,6 +176,9 @@ export default function Dashboard() {
                       route.status === 'In Progress' || route.status === 'Departed' ? 'blue' :
                       route.status === 'Exception' ? 'amber' : 'grey';
                     
+                    // Show manifest link for routes that are ready to manifest
+                    const showManifestLink = route.status === 'Pending' || route.status === 'Ready to manifest';
+                    
                     return (
                       <tr key={route.routeId} className="hover:bg-gray-50">
                         <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 align-middle">
@@ -209,8 +212,8 @@ export default function Dashboard() {
                           </Badge>
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100 align-middle">
-                          {route.status === 'Pending' ? (
-                            <Link to="/manifests" className="text-blue-600 hover:underline text-[12px]">
+                          {showManifestLink ? (
+                            <Link to={`/manifests?routeId=${route.routeId}`} className="text-blue-600 hover:underline text-[12px]">
                               Manifest →
                             </Link>
                           ) : (

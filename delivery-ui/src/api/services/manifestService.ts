@@ -1,5 +1,5 @@
 import { apiClient } from '../apiClient';
-import type { ManifestDto, CreateManifestRequest, UpdateManifestRequest } from '../types';
+import type { ManifestDto, CreateManifestRequest, UpdateManifestRequest, ManifestStopDto } from '../types';
 
 export const manifestService = {
   getManifests: async (depotId?: string, date?: string): Promise<ManifestDto[]> => {
@@ -15,6 +15,16 @@ export const manifestService = {
     
     if (!response.success) {
       throw new Error(response.message || 'Failed to fetch manifests');
+    }
+    
+    return response.data;
+  },
+  
+  getRouteStops: async (routeId: string): Promise<ManifestStopDto[]> => {
+    const response = await apiClient.get<ManifestStopDto[]>(`/manifests/routes/${routeId}/stops`);
+    
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to fetch route stops');
     }
     
     return response.data;

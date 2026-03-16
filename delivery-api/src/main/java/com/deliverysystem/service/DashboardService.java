@@ -134,6 +134,9 @@ public class DashboardService {
         List<RouteSummaryDto> summaries = new ArrayList<>();
         
         for (Route route : routes) {
+            // Get all received boxes for the route before checking for manifests
+            List<Box> routeBoxes = boxRepository.findByOrderRouteIdReceived(route.getId());
+            
             List<Manifest> manifests = manifestRepository.findManifestsByRouteIdAndDate(route.getId(), date);
             
             RouteSummaryDto summary = new RouteSummaryDto();
@@ -146,22 +149,22 @@ public class DashboardService {
                 summary.setVehicle(manifest.getVehicle().getRegistration());
                 summary.setDriver(manifest.getDriver().getName());
                 
-                List<Box> boxes = boxRepository.findByManifestId(manifest.getId());
-                int boxesTotal = boxes.size();
-                int boxesDone = (int) boxes.stream()
+                // Use route boxes for totals instead of just manifest boxes
+                int boxesTotal = routeBoxes.size();
+                int boxesDone = (int) routeBoxes.stream()
                     .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                     .count();
                 
                 summary.setBoxesTotal(boxesTotal);
                 summary.setBoxesDone(boxesDone);
                 
-                // Count unique orders
-                long uniqueOrders = boxes.stream()
+                // Count unique orders from route boxes
+                long uniqueOrders = routeBoxes.stream()
                     .map(b -> b.getOrder().getId())
                     .distinct()
                     .count();
                 
-                long deliveredOrders = boxes.stream()
+                long deliveredOrders = routeBoxes.stream()
                     .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                     .map(b -> b.getOrder().getId())
                     .distinct()
@@ -185,14 +188,43 @@ public class DashboardService {
                     summary.setProgressNote("Awaiting manifest");
                 }
             } else {
+                // No manifest exists - show received boxes with status "Ready to manifest"
                 summary.setVehicle("-");
                 summary.setDriver("-");
-                summary.setDeliveriesDone(0);
-                summary.setDeliveriesTotal(0);
-                summary.setBoxesDone(0);
-                summary.setBoxesTotal(0);
-                summary.setStatus("Pending");
-                summary.setProgressNote("Awaiting manifest");
+                
+                if (!routeBoxes.isEmpty()) {
+                    int boxesTotal = routeBoxes.size();
+                    int boxesDone = (int) routeBoxes.stream()
+                        .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
+                        .count();
+                    
+                    summary.setBoxesTotal(boxesTotal);
+                    summary.setBoxesDone(boxesDone);
+                    
+                    // Count unique orders from route boxes
+                    long uniqueOrders = routeBoxes.stream()
+                        .map(b -> b.getOrder().getId())
+                        .distinct()
+                        .count();
+                    
+                    long deliveredOrders = routeBoxes.stream()
+                        .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
+                        .map(b -> b.getOrder().getId())
+                        .distinct()
+                        .count();
+                    
+                    summary.setDeliveriesTotal((int) uniqueOrders);
+                    summary.setDeliveriesDone((int) deliveredOrders);
+                    summary.setStatus("Ready to manifest");
+                    summary.setProgressNote("");
+                } else {
+                    summary.setDeliveriesDone(0);
+                    summary.setDeliveriesTotal(0);
+                    summary.setBoxesDone(0);
+                    summary.setBoxesTotal(0);
+                    summary.setStatus("Pending");
+                    summary.setProgressNote("Awaiting manifest");
+                }
             }
             
             summaries.add(summary);

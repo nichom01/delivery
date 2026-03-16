@@ -51,14 +51,20 @@ public class RouteService {
         RouteDrilldownDto dto = new RouteDrilldownDto();
         dto.setRouteName(route.getName());
         
+        // Get all received boxes for the route before checking for manifests
+        List<Box> routeBoxes = boxRepository.findByOrderRouteIdReceived(routeId);
+        
         // Get manifest for the date
         List<Manifest> manifests = manifestRepository.findManifestsByRouteIdAndDate(routeId, date);
         
         if (manifests.isEmpty()) {
             dto.setVehicle("-");
             dto.setDriver("-");
-            dto.setStats(new RouteStatsDto(0, 0, 0, 0, 0, null, null));
-            dto.setStops(new ArrayList<>());
+            // Use route boxes for stats and stops instead of empty
+            RouteStatsDto stats = calculateRouteStats(routeBoxes);
+            dto.setStats(stats);
+            List<DeliveryStopDto> stops = createDeliveryStops(routeBoxes);
+            dto.setStops(stops);
             return dto;
         }
         
@@ -66,15 +72,12 @@ public class RouteService {
         dto.setVehicle(manifest.getVehicle().getRegistration());
         dto.setDriver(manifest.getDriver().getName());
         
-        // Get all boxes for this manifest
-        List<Box> boxes = boxRepository.findByManifestId(manifest.getId());
-        
-        // Calculate stats
-        RouteStatsDto stats = calculateRouteStats(boxes);
+        // Use route boxes for stats and stops instead of just manifest boxes
+        RouteStatsDto stats = calculateRouteStats(routeBoxes);
         dto.setStats(stats);
         
-        // Create delivery stops from boxes grouped by order
-        List<DeliveryStopDto> stops = createDeliveryStops(boxes);
+        // Create delivery stops from route boxes grouped by order
+        List<DeliveryStopDto> stops = createDeliveryStops(routeBoxes);
         dto.setStops(stops);
         
         return dto;

@@ -109,12 +109,14 @@ public class OrderService {
     }
     
     @Transactional
-    public Box receiveBox(String boxId, User user) {
-        Box box = boxRepository.findById(boxId)
-            .orElseThrow(() -> new IllegalArgumentException("Box not found: " + boxId));
+    public Box receiveBox(String boxIdOrIdentifier, User user) {
+        // Try to find by UUID first, then by identifier
+        Box box = boxRepository.findById(boxIdOrIdentifier)
+            .orElseGet(() -> boxRepository.findByIdentifier(boxIdOrIdentifier)
+                .orElseThrow(() -> new IllegalArgumentException("Box not found: " + boxIdOrIdentifier)));
         
         if (box.getStatus() == Box.BoxStatus.RECEIVED) {
-            throw new IllegalStateException("Box " + boxId + " has already been received");
+            throw new IllegalStateException("Box " + boxIdOrIdentifier + " has already been received");
         }
         
         box.setStatus(Box.BoxStatus.RECEIVED);
@@ -127,7 +129,8 @@ public class OrderService {
         auditService.logUpdate(user, "Box", box.getId(), depotId, 
             Box.BoxStatus.EXPECTED, Box.BoxStatus.RECEIVED);
         
-        log.info("Box {} received for order {}", boxId, box.getOrder().getId());
+        log.info("Box {} (identifier: {}) received for order {}", 
+            box.getId(), box.getIdentifier() != null ? box.getIdentifier() : "N/A", box.getOrder().getId());
         
         return box;
     }
