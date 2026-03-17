@@ -416,7 +416,7 @@ public class DashboardService {
                 dto.setCustomer(order.getCustomerAddress() != null ? order.getCustomerAddress() : "Unknown");
                 dto.setRouteName(order.getRoute() != null ? order.getRoute().getName() : "-");
                 dto.setBoxesReceived((int) receivedCount);
-                dto.setBoxesExpected((int) (expectedCount + boxes.size() - receivedCount));
+                dto.setBoxesExpected(boxes.size());
                 
                 List<BoxDto> boxDtos = boxes.stream()
                     .map(b -> {
