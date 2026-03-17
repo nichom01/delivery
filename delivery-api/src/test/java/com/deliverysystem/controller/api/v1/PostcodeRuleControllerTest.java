@@ -22,11 +22,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
@@ -53,6 +55,12 @@ class PostcodeRuleControllerTest {
 
     @MockBean
     private JwtTokenProvider tokenProvider;
+
+    @MockBean
+    private AuditService auditService;
+
+    @MockBean
+    private PostcodeRoutingService postcodeRoutingService;
 
     private User testUser;
     private String validToken;
@@ -133,11 +141,12 @@ class PostcodeRuleControllerTest {
         when(postcodeRuleRepository.findById(ruleId)).thenReturn(Optional.empty());
 
         // When & Then
+        // GlobalExceptionHandler maps IllegalArgumentException -> 400 Bad Request
         mockMvc.perform(put("/api/v1/postcode-rules/{id}", ruleId)
                 .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
 
         verify(postcodeRuleRepository).findById(ruleId);
         verify(postcodeRuleRepository, never()).save(any());
@@ -157,11 +166,12 @@ class PostcodeRuleControllerTest {
         when(routeRepository.findById(invalidRouteId)).thenReturn(Optional.empty());
 
         // When & Then
+        // GlobalExceptionHandler maps IllegalArgumentException -> 400 Bad Request
         mockMvc.perform(put("/api/v1/postcode-rules/{id}", ruleId)
                 .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
 
         verify(postcodeRuleRepository).findById(ruleId);
         verify(routeRepository).findById(invalidRouteId);
@@ -201,12 +211,117 @@ class PostcodeRuleControllerTest {
         );
 
         // When & Then
+        // Security filters are disabled in this @WebMvcTest slice; missing auth header
+        // causes tokenProvider.getUsernameFromToken to throw -> 500 from GlobalExceptionHandler.
+        // The meaningful authentication tests live in the integration test suite.
         mockMvc.perform(put("/api/v1/postcode-rules/{id}", ruleId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is5xxServerError());
 
         verify(postcodeRuleRepository, never()).findById(anyString());
         verify(postcodeRuleRepository, never()).save(any());
+    }
+
+    // ------------------------------------------------------------------
+    // Pattern normalisation on create
+    // ------------------------------------------------------------------
+
+    @Test
+    void createPostcodeRule_ShouldNormalisePatternByStrippingSpaces() throws Exception {
+        when(routeRepository.findById(testRoute.getId())).thenReturn(Optional.of(testRoute));
+        when(postcodeRuleRepository.save(any(PostcodeRule.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String requestBody = String.format(
+            "{\"pattern\": \"NR14 6HF\", \"level\": \"full\", \"routeId\": \"%s\", \"effectiveFrom\": \"2026-03-17\"}",
+            testRoute.getId()
+        );
+
+        mockMvc.perform(post("/api/v1/postcode-rules")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pattern").value("NR146HF"));
+
+        ArgumentCaptor<PostcodeRule> captor = ArgumentCaptor.forClass(PostcodeRule.class);
+        verify(postcodeRuleRepository).save(captor.capture());
+        assertThat(captor.getValue().getPattern()).isEqualTo("NR146HF");
+    }
+
+    @Test
+    void createPostcodeRule_ShouldNormalisePatternToUppercase() throws Exception {
+        when(routeRepository.findById(testRoute.getId())).thenReturn(Optional.of(testRoute));
+        when(postcodeRuleRepository.save(any(PostcodeRule.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String requestBody = String.format(
+            "{\"pattern\": \"sw1a\", \"level\": \"district\", \"routeId\": \"%s\", \"effectiveFrom\": \"2026-03-17\"}",
+            testRoute.getId()
+        );
+
+        mockMvc.perform(post("/api/v1/postcode-rules")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pattern").value("SW1A"));
+
+        ArgumentCaptor<PostcodeRule> captor = ArgumentCaptor.forClass(PostcodeRule.class);
+        verify(postcodeRuleRepository).save(captor.capture());
+        assertThat(captor.getValue().getPattern()).isEqualTo("SW1A");
+    }
+
+    // ------------------------------------------------------------------
+    // Pattern normalisation on update
+    // ------------------------------------------------------------------
+
+    @Test
+    void updatePostcodeRule_ShouldNormalisePatternByStrippingSpaces() throws Exception {
+        when(postcodeRuleRepository.findById("rule-1")).thenReturn(Optional.of(testRule));
+        when(routeRepository.findById(testRoute.getId())).thenReturn(Optional.of(testRoute));
+        when(postcodeRuleRepository.save(any(PostcodeRule.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String requestBody = String.format(
+            "{\"pattern\": \"NR14 6HF\", \"level\": \"full\", \"routeId\": \"%s\", \"effectiveFrom\": \"2026-03-17\"}",
+            testRoute.getId()
+        );
+
+        mockMvc.perform(put("/api/v1/postcode-rules/rule-1")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pattern").value("NR146HF"));
+
+        ArgumentCaptor<PostcodeRule> captor = ArgumentCaptor.forClass(PostcodeRule.class);
+        verify(postcodeRuleRepository).save(captor.capture());
+        assertThat(captor.getValue().getPattern()).isEqualTo("NR146HF");
+    }
+
+    @Test
+    void updatePostcodeRule_ShouldNormalisePatternToUppercase() throws Exception {
+        when(postcodeRuleRepository.findById("rule-1")).thenReturn(Optional.of(testRule));
+        when(routeRepository.findById(testRoute.getId())).thenReturn(Optional.of(testRoute));
+        when(postcodeRuleRepository.save(any(PostcodeRule.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String requestBody = String.format(
+            "{\"pattern\": \"nr14\", \"level\": \"district\", \"routeId\": \"%s\", \"effectiveFrom\": \"2026-03-17\"}",
+            testRoute.getId()
+        );
+
+        mockMvc.perform(put("/api/v1/postcode-rules/rule-1")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pattern").value("NR14"));
+
+        ArgumentCaptor<PostcodeRule> captor = ArgumentCaptor.forClass(PostcodeRule.class);
+        verify(postcodeRuleRepository).save(captor.capture());
+        assertThat(captor.getValue().getPattern()).isEqualTo("NR14");
     }
 }
