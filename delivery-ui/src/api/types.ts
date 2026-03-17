@@ -292,6 +292,9 @@ export interface AuditEventDto {
   role: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   entityType: string;
+  entityId: string | null;
+  beforeValue: string | null;
+  afterValue: string | null;
   detail: string;
 }
 

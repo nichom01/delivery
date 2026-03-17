@@ -7,18 +7,24 @@ public class AuditEventDto {
     private String role;
     private String action; // 'CREATE' | 'UPDATE' | 'DELETE'
     private String entityType;
+    private String entityId;
+    private String beforeValue;
+    private String afterValue;
     private String detail;
     
     public AuditEventDto() {
     }
     
-    public AuditEventDto(String timestamp, String userId, String userName, String role, String action, String entityType, String detail) {
+    public AuditEventDto(String timestamp, String userId, String userName, String role, String action, String entityType, String entityId, String beforeValue, String afterValue, String detail) {
         this.timestamp = timestamp;
         this.userId = userId;
         this.userName = userName;
         this.role = role;
         this.action = action;
         this.entityType = entityType;
+        this.entityId = entityId;
+        this.beforeValue = beforeValue;
+        this.afterValue = afterValue;
         this.detail = detail;
     }
     
@@ -68,6 +74,30 @@ public class AuditEventDto {
     
     public void setEntityType(String entityType) {
         this.entityType = entityType;
+    }
+    
+    public String getEntityId() {
+        return entityId;
+    }
+    
+    public void setEntityId(String entityId) {
+        this.entityId = entityId;
+    }
+    
+    public String getBeforeValue() {
+        return beforeValue;
+    }
+    
+    public void setBeforeValue(String beforeValue) {
+        this.beforeValue = beforeValue;
+    }
+    
+    public String getAfterValue() {
+        return afterValue;
+    }
+    
+    public void setAfterValue(String afterValue) {
+        this.afterValue = afterValue;
     }
     
     public String getDetail() {

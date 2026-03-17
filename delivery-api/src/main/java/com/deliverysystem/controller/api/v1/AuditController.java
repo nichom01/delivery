@@ -41,6 +41,9 @@ public class AuditController {
             dto.setRole(event.getRole());
             dto.setAction(event.getAction().name());
             dto.setEntityType(event.getEntityType());
+            dto.setEntityId(event.getEntityId());
+            dto.setBeforeValue(event.getBeforeValue());
+            dto.setAfterValue(event.getAfterValue());
             dto.setDetail(event.getDetail());
             return dto;
         }).collect(Collectors.toList());
