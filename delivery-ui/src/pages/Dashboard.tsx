@@ -180,10 +180,13 @@ export default function Dashboard() {
                     const statusColor =
                       route.status === 'Complete' ? 'green' :
                       route.status === 'In Progress' || route.status === 'Departed' ? 'blue' :
-                      route.status === 'Exception' ? 'amber' : 'grey';
-                    
-                    // Show manifest link for routes that are ready to manifest
+                      route.status === 'Draft' ? 'amber' :
+                      route.status === 'Exception' ? 'red' : 'grey';
+
+                    // Only show "Manifest →" (create) for routes with no manifest yet
                     const showManifestLink = route.status === 'Pending' || route.status === 'Ready to manifest';
+                    // Show "Edit draft →" for routes with a draft manifest already open
+                    const showDraftLink = route.status === 'Draft';
                     
                     return (
                       <tr key={route.routeId} className="hover:bg-gray-50">
@@ -246,6 +249,10 @@ export default function Dashboard() {
                           {showManifestLink ? (
                             <Link to={`/manifests?routeId=${route.routeId}`} className="text-blue-600 hover:underline text-[12px]">
                               Manifest →
+                            </Link>
+                          ) : showDraftLink ? (
+                            <Link to={`/manifests?routeId=${route.routeId}`} className="text-amber-600 hover:underline text-[12px]">
+                              Edit draft →
                             </Link>
                           ) : (
                             <Link

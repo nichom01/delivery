@@ -184,6 +184,9 @@ public class DashboardService {
                 } else if (manifest.getStatus() == Manifest.ManifestStatus.CONFIRMED) {
                     summary.setStatus("Departed");
                     summary.setProgressNote("Departed " + java.time.LocalTime.now().toString().substring(0, 5));
+                } else if (manifest.getStatus() == Manifest.ManifestStatus.DRAFT) {
+                    summary.setStatus("Draft");
+                    summary.setProgressNote("Manifest in draft");
                 } else {
                     summary.setStatus("Pending");
                     summary.setProgressNote("Awaiting manifest");
