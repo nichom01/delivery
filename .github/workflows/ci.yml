@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Avoid duplicate runs when a PR is updated on a branch inside the same repo
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Backend: unit + integration + repository tests ────────────────────────
+  test-api:
+    name: API Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run all backend tests
+        working-directory: delivery-api
+        run: mvn test -B -q
+        # -B = batch/non-interactive, -q = quiet (errors still shown)
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: delivery-api/target/surefire-reports/*.xml
+          retention-days: 7
+
+  # ── Frontend: lint + unit tests + build check ─────────────────────────────
+  test-ui:
+    name: UI Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: delivery-ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: delivery-ui
+        run: npm ci
+
+      - name: Lint
+        working-directory: delivery-ui
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: delivery-ui
+        run: npm run test:run
+
+      - name: Build (type-check + bundle)
+        working-directory: delivery-ui
+        run: npm run build
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: delivery-ui/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ── Build & push Docker images to GHCR ────────────────────────────────────
+  # Runs only on pushes to main (not on pull requests)
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    needs: [test-api, test-ui]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write   # required to push to GHCR
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── API image ──────────────────────────────────────────────────────────
+      - name: API image metadata
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/delivery-api
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./delivery-api
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha,scope=delivery-api
+          cache-to: type=gha,mode=max,scope=delivery-api
+
+      # ── UI image ───────────────────────────────────────────────────────────
+      - name: UI image metadata
+        id: meta-ui
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/delivery-ui
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build & push UI image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./delivery-ui
+          push: true
+          tags: ${{ steps.meta-ui.outputs.tags }}
+          labels: ${{ steps.meta-ui.outputs.labels }}
+          cache-from: type=gha,scope=delivery-ui
+          cache-to: type=gha,mode=max,scope=delivery-ui
