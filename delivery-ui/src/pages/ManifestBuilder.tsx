@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { manifestService } from '@/api/services/manifestService';
 import { depotService } from '@/api/services/depotService';
@@ -17,6 +17,7 @@ export default function ManifestBuilder() {
   const [searchParams] = useSearchParams();
   const routeIdFromUrl = searchParams.get('routeId');
   const { selectedDepotId, getDepotById } = useApp();
+  const navigate = useNavigate();
   const [manifests, setManifests] = useState<ManifestDto[]>([]);
   const [routes, setRoutes] = useState<RouteDto[]>([]);
   const [vehicles, setVehicles] = useState<VehicleDto[]>([]);
@@ -97,6 +98,19 @@ export default function ManifestBuilder() {
     }
   }, [manifest, routes, routeIdFromUrl]);
   
+  // When arriving via ?routeId= (no manifestId in URL), redirect to the existing
+  // draft manifest for that route so the page binds correctly
+  useEffect(() => {
+    if (!manifestId && routeIdFromUrl && manifests.length > 0) {
+      const existingDraft = manifests.find(
+        m => m.routeId === routeIdFromUrl && (m.status === 'DRAFT' || m.status === 'CONFIRMED')
+      );
+      if (existingDraft) {
+        navigate(`/manifests/${existingDraft.id}`, { replace: true });
+      }
+    }
+  }, [manifests, manifestId, routeIdFromUrl]);
+
   // Fetch route stops when routeId is selected but no manifest exists
   useEffect(() => {
     if (!manifest && routeId && routes.length > 0) {
@@ -134,11 +148,13 @@ export default function ManifestBuilder() {
           driverId: driverId,
           vehicleId: vehicleId
         });
-        
+
         setSuccessMessage('Manifest created successfully');
-        // Reload manifests
+        // Reload manifests then navigate to the new manifest URL so the page
+        // binds to it correctly and Confirm becomes active
         const updatedManifests = await manifestService.getManifests(selectedDepotId);
         setManifests(updatedManifests);
+        navigate(`/manifests/${newManifest.id}`, { replace: true });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create manifest');
       } finally {
@@ -239,10 +255,6 @@ export default function ManifestBuilder() {
   
   if (loading) {
     return <div className="p-5">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="p-5 text-red-600">Error: {error}</div>;
   }
 
   if (!selectedDepotId) {
