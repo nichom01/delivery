@@ -80,7 +80,7 @@ export default function Users() {
                   <tbody>
                     {data.users.map((user) => {
                       const depot = user.depotId ? data.depots.find(d => d.id === user.depotId) : null;
-                      const roleBadgeVariant =
+                      const roleBadgeVariant: 'purple' | 'blue' | 'grey' =
                         user.role === 'CENTRAL_ADMIN' ? 'purple' :
                         user.role === 'DEPOT_MANAGER' ? 'blue' : 'grey';
                       return (
@@ -92,7 +92,7 @@ export default function Users() {
                             {user.email}
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100">
-                            <Badge variant={roleBadgeVariant as any}>
+                            <Badge variant={roleBadgeVariant}>
                               {user.role === 'CENTRAL_ADMIN' ? 'Central Admin' :
                                user.role === 'DEPOT_MANAGER' ? 'Depot Manager' : 'Driver'}
                             </Badge>

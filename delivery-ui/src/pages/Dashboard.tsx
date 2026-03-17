@@ -28,7 +28,7 @@ function ProgressBar({ percentage, color }: { percentage: number; color: 'green'
 }
 
 export default function Dashboard() {
-  const { selectedDepotId, depots, getDepotById } = useApp();
+  const { selectedDepotId, getDepotById } = useApp();
   const [dashboard, setDashboard] = useState<DashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

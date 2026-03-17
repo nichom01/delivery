@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import type { OrderAwaitingGoodsDto } from '@/api/types';
 
 export default function GoodsReceiving() {
-  const { selectedDepotId, depots, getDepotById } = useApp();
+  const { selectedDepotId, getDepotById } = useApp();
   const [boxId, setBoxId] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderAwaitingGoodsDto[]>([]);
@@ -226,7 +226,7 @@ export default function GoodsReceiving() {
                   </thead>
                   <tbody>
                     {orders.map((o) => {
-                      const badgeColor = o.boxesReceived === o.boxesExpected ? 'green' :
+                      const badgeColor: 'green' | 'red' | 'amber' = o.boxesReceived === o.boxesExpected ? 'green' :
                         o.boxesReceived === 0 ? 'red' : 'amber';
                       const bgColor = o.boxesReceived === o.boxesExpected ? 'bg-green-50' :
                         o.boxesReceived === 0 ? 'bg-red-50' : 'bg-amber-50';
@@ -246,7 +246,7 @@ export default function GoodsReceiving() {
                             {o.routeName}
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100">
-                            <Badge variant={badgeColor as any}>
+                            <Badge variant={badgeColor}>
                               {o.boxesReceived === o.boxesExpected ? `${o.boxesReceived} / ${o.boxesExpected} ✓` : `${o.boxesReceived} / ${o.boxesExpected}`}
                             </Badge>
                           </td>
@@ -278,7 +278,6 @@ export default function GoodsReceiving() {
                     <div className="font-semibold text-[12px] mb-2">Box Status ({order.boxesExpected} expected)</div>
                     <div className="grid grid-cols-4 gap-2">
                       {order.boxes.map((box) => {
-                        const statusColor = box.status === 'received' ? 'green' : 'amber';
                         return (
                           <div
                             key={box.id}

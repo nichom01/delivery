@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import type { PostcodeLookupDto } from '@/api/types';
 
 export default function OrderEntry() {
-  const { selectedDepotId, depots, getDepotById } = useApp();
+  const { selectedDepotId, getDepotById } = useApp();
   const navigate = useNavigate();
   const [orderId, setOrderId] = useState('ORD-4521');
   const [despatchId, setDespatchId] = useState('DSP-8834');

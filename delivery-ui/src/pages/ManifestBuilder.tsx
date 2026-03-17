@@ -168,7 +168,7 @@ export default function ManifestBuilder() {
       setError(null);
       setSuccessMessage(null);
       
-      const updateRequest: any = {};
+      const updateRequest: { driverId?: string; vehicleId?: string; date?: string } = {};
       if (driverId !== manifest.driverId) updateRequest.driverId = driverId;
       if (vehicleId !== manifest.vehicleId) updateRequest.vehicleId = vehicleId;
       if (date !== manifest.date) updateRequest.date = date;
@@ -198,7 +198,7 @@ export default function ManifestBuilder() {
       setSuccessMessage(null);
       
       // Save any pending changes first
-      const updateRequest: any = {};
+      const updateRequest: { driverId?: string; vehicleId?: string; date?: string } = {};
       if (driverId !== manifest.driverId) updateRequest.driverId = driverId;
       if (vehicleId !== manifest.vehicleId) updateRequest.vehicleId = vehicleId;
       if (date !== manifest.date) updateRequest.date = date;
@@ -242,9 +242,6 @@ export default function ManifestBuilder() {
   };
 
   const route = routes.find(r => r.id === (manifest?.routeId || routeId));
-  const driver = manifest ? drivers.find(d => d.id === manifest.driverId) : (driverId ? drivers.find(d => d.id === driverId) : null);
-  const vehicle = manifest ? vehicles.find(v => v.id === manifest.vehicleId) : (vehicleId ? vehicles.find(v => v.id === vehicleId) : null);
-
   const depot = selectedDepotId ? getDepotById(selectedDepotId) : null;
   
   // Determine if form should be enabled (no manifest or manifest is DRAFT)

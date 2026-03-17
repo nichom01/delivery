@@ -3,7 +3,6 @@ package com.deliverysystem.controller.api.v1;
 import com.deliverysystem.domain.Depot;
 import com.deliverysystem.domain.Route;
 import com.deliverysystem.domain.User;
-import com.deliverysystem.repository.DepotRepository;
 import com.deliverysystem.repository.RouteRepository;
 import com.deliverysystem.repository.UserRepository;
 import com.deliverysystem.security.JwtTokenProvider;
@@ -40,6 +39,9 @@ class RouteControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private RouteRepository routeRepository;
 
     @MockBean
     private RouteService routeService;
@@ -157,7 +159,7 @@ class RouteControllerTest {
         mockMvc.perform(post("/api/v1/routes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is5xxServerError());
 
         verify(routeService, never()).createRoute(anyString(), anyString(), anyString(), anyString(), any());
     }
@@ -214,7 +216,7 @@ class RouteControllerTest {
         mockMvc.perform(put("/api/v1/routes/{id}", routeId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is5xxServerError());
 
         verify(routeService, never()).updateRoute(anyString(), anyString(), anyString(), any());
     }

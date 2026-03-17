@@ -7,17 +7,17 @@ import { depotService } from '../depotService';
 import { apiClient } from '../../apiClient';
 
 // Mock the apiClient
-jest.mock('../../apiClient', () => ({
+vi.mock('../../apiClient', () => ({
   apiClient: {
-    post: jest.fn(),
-    put: jest.fn(),
-    get: jest.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
 describe('DepotService - Create Depot', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should create depot successfully', async () => {
@@ -35,7 +35,7 @@ describe('DepotService - Create Depot', () => {
       },
     };
 
-    (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     const request = {
       name: 'Test Depot',
@@ -54,7 +54,7 @@ describe('DepotService - Create Depot', () => {
       message: 'Depot with name "Test Depot" already exists',
     };
 
-    (apiClient.post as jest.Mock).mockResolvedValue(mockErrorResponse);
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockErrorResponse);
 
     const request = {
       name: 'Test Depot',
@@ -73,7 +73,7 @@ describe('DepotService - Create Depot', () => {
       // data is missing
     };
 
-    (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     const request = {
       name: 'Test Depot',
@@ -91,7 +91,7 @@ describe('DepotService - Create Depot', () => {
       message: 'Validation failed: name Depot name is required, address Address is required',
     };
 
-    (apiClient.post as jest.Mock).mockResolvedValue(mockErrorResponse);
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockErrorResponse);
 
     const request = {
       name: '',
@@ -109,7 +109,7 @@ describe('DepotService - Create Depot', () => {
       message: 'HTTP error! status: 500',
     };
 
-    (apiClient.post as jest.Mock).mockResolvedValue(mockErrorResponse);
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockErrorResponse);
 
     const request = {
       name: 'Test Depot',
@@ -124,7 +124,7 @@ describe('DepotService - Create Depot', () => {
 
 describe('DepotService - Update Depot', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should update depot successfully', async () => {
@@ -142,7 +142,7 @@ describe('DepotService - Update Depot', () => {
       },
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValue(mockResponse);
+    (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     const request = {
       name: 'Updated Depot',
@@ -161,7 +161,7 @@ describe('DepotService - Update Depot', () => {
       message: 'Depot not found: depot-999',
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValue(mockErrorResponse);
+    (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue(mockErrorResponse);
 
     const request = {
       name: 'Updated Depot',

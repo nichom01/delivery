@@ -22,11 +22,11 @@ function StatCard({ label, value, sub, color }: { label: string; value: string |
 
 export default function RouteDrilldown() {
   const { routeId } = useParams();
-  const { selectedDepotId, depots, getDepotById } = useApp();
+  const { selectedDepotId, getDepotById } = useApp();
   const [routeData, setRouteData] = useState<RouteDrilldownDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const selectedDate = new Date().toISOString().split('T')[0];
   
   useEffect(() => {
     if (!routeId) {
@@ -154,7 +154,7 @@ export default function RouteDrilldown() {
                 </thead>
                 <tbody>
                   {routeData.stops.map((stop) => {
-                    const statusColor =
+                    const statusColor: 'green' | 'amber' | 'grey' =
                       stop.status === 'Delivered' ? 'green' :
                       stop.status === 'Part Delivered' ? 'amber' : 'grey';
                     return (
@@ -172,7 +172,7 @@ export default function RouteDrilldown() {
                           {stop.boxes}
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100">
-                          <Badge variant={statusColor as any}>
+                          <Badge variant={statusColor}>
                             {stop.status}
                           </Badge>
                         </td>

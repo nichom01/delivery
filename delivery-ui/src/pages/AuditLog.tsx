@@ -192,10 +192,10 @@ export default function AuditLog() {
                   </tr>
                 ) : (
                   filteredEvents.map((event, idx) => {
-                    const actionBadgeVariant =
+                    const actionBadgeVariant: 'green' | 'blue' | 'red' =
                       event.action === 'CREATE' ? 'green' :
                       event.action === 'UPDATE' ? 'blue' : 'red';
-                    const roleBadgeVariant =
+                    const roleBadgeVariant: 'purple' | 'blue' | 'grey' =
                       event.role === 'CENTRAL_ADMIN' ? 'purple' :
                       event.role === 'DEPOT_MANAGER' ? 'blue' : 'grey';
                     const roleDisplayName =
@@ -217,10 +217,10 @@ export default function AuditLog() {
                             {event.userName}
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100">
-                            <Badge variant={roleBadgeVariant as any}>{roleDisplayName}</Badge>
+                            <Badge variant={roleBadgeVariant}>{roleDisplayName}</Badge>
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100">
-                            <Badge variant={actionBadgeVariant as any}>{event.action}</Badge>
+                            <Badge variant={actionBadgeVariant}>{event.action}</Badge>
                           </td>
                           <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700">
                             {event.entityType}

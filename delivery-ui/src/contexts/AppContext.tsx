@@ -4,7 +4,6 @@ import { depotService } from '@/api/services/depotService';
 import { userService } from '@/api/services/userService';
 import { vehicleService } from '@/api/services/vehicleService';
 import { driverService } from '@/api/services/driverService';
-import { routeService } from '@/api/services/routeService';
 import type { DepotDto, CurrentUserDto, UserDto, VehicleDto, DriverDto, RouteDto } from '@/api/types';
 
 interface AppData {

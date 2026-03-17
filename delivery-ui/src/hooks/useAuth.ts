@@ -30,14 +30,10 @@ export function useAuth() {
   }, [navigate]);
 
   const login = async (username: string, password: string): Promise<void> => {
-    try {
-      const response = await authService.login(username, password);
-      storage.setToken(response.token);
-      setUser(response.user);
-      navigate('/dashboard');
-    } catch (error) {
-      throw error;
-    }
+    const response = await authService.login(username, password);
+    storage.setToken(response.token);
+    setUser(response.user);
+    navigate('/dashboard');
   };
 
   const logout = () => {
