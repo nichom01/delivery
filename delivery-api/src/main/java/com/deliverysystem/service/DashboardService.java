@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -132,47 +133,47 @@ public class DashboardService {
     
     private List<RouteSummaryDto> calculateRouteSummaries(List<Route> routes, LocalDate date) {
         List<RouteSummaryDto> summaries = new ArrayList<>();
-        
+
         for (Route route : routes) {
             // Get all received boxes for the route before checking for manifests
             List<Box> routeBoxes = boxRepository.findByOrderRouteIdReceived(route.getId());
-            
+
             List<Manifest> manifests = manifestRepository.findManifestsByRouteIdAndDate(route.getId(), date);
-            
+
             RouteSummaryDto summary = new RouteSummaryDto();
             summary.setRouteId(route.getId());
             summary.setRouteName(route.getName());
             summary.setDescription(route.getDescription() != null ? route.getDescription() : "");
-            
+
             if (!manifests.isEmpty()) {
                 Manifest manifest = manifests.get(0); // Use first manifest for the date
                 summary.setVehicle(manifest.getVehicle().getRegistration());
                 summary.setDriver(manifest.getDriver().getName());
-                
+
                 // Use route boxes for totals instead of just manifest boxes
                 int boxesTotal = routeBoxes.size();
                 int boxesDone = (int) routeBoxes.stream()
                     .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                     .count();
-                
+
                 summary.setBoxesTotal(boxesTotal);
                 summary.setBoxesDone(boxesDone);
-                
+
                 // Count unique orders from route boxes
                 long uniqueOrders = routeBoxes.stream()
                     .map(b -> b.getOrder().getId())
                     .distinct()
                     .count();
-                
+
                 long deliveredOrders = routeBoxes.stream()
                     .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                     .map(b -> b.getOrder().getId())
                     .distinct()
                     .count();
-                
+
                 summary.setDeliveriesTotal((int) uniqueOrders);
                 summary.setDeliveriesDone((int) deliveredOrders);
-                
+
                 // Determine status
                 if (manifest.getStatus() == Manifest.ManifestStatus.COMPLETE) {
                     summary.setStatus("Complete");
@@ -191,28 +192,28 @@ public class DashboardService {
                 // No manifest exists - show received boxes with status "Ready to manifest"
                 summary.setVehicle("-");
                 summary.setDriver("-");
-                
+
                 if (!routeBoxes.isEmpty()) {
                     int boxesTotal = routeBoxes.size();
                     int boxesDone = (int) routeBoxes.stream()
                         .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                         .count();
-                    
+
                     summary.setBoxesTotal(boxesTotal);
                     summary.setBoxesDone(boxesDone);
-                    
+
                     // Count unique orders from route boxes
                     long uniqueOrders = routeBoxes.stream()
                         .map(b -> b.getOrder().getId())
                         .distinct()
                         .count();
-                    
+
                     long deliveredOrders = routeBoxes.stream()
                         .filter(b -> b.getStatus() == Box.BoxStatus.DELIVERED)
                         .map(b -> b.getOrder().getId())
                         .distinct()
                         .count();
-                    
+
                     summary.setDeliveriesTotal((int) uniqueOrders);
                     summary.setDeliveriesDone((int) deliveredOrders);
                     summary.setStatus("Ready to manifest");
@@ -226,11 +227,139 @@ public class DashboardService {
                     summary.setProgressNote("Awaiting manifest");
                 }
             }
-            
+
+            // Populate planned-payload figures from requestedDeliveryDate (all box statuses)
+            List<Order> plannedOrders = orderRepository.findByRouteIdAndRequestedDeliveryDate(route.getId(), date);
+            int plannedOrderCount = plannedOrders.size();
+            int plannedBoxCount = 0;
+            int awaitingGoodsOrderCount = 0;
+            int awaitingGoodsBoxCount = 0;
+
+            for (Order order : plannedOrders) {
+                List<Box> boxes = boxRepository.findByOrderId(order.getId());
+                plannedBoxCount += boxes.size();
+                long expectedInOrder = boxes.stream()
+                    .filter(b -> b.getStatus() == Box.BoxStatus.EXPECTED)
+                    .count();
+                if (expectedInOrder > 0) {
+                    awaitingGoodsOrderCount++;
+                    awaitingGoodsBoxCount += (int) expectedInOrder;
+                }
+            }
+
+            summary.setPlannedOrders(plannedOrderCount);
+            summary.setPlannedBoxes(plannedBoxCount);
+            summary.setAwaitingGoodsOrders(awaitingGoodsOrderCount);
+            summary.setAwaitingGoodsBoxes(awaitingGoodsBoxCount);
+
             summaries.add(summary);
         }
-        
+
         return summaries;
+    }
+
+    @Transactional(readOnly = true)
+    public DayPlanDto getDayPlan(String depotId, LocalDate date) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        Depot depot = depotRepository.findById(depotId)
+                .orElseThrow(() -> new IllegalArgumentException("Depot not found: " + depotId));
+
+        List<Route> routes = routeRepository.findByDepotId(depotId);
+
+        DayPlanDto dayPlan = new DayPlanDto();
+        dayPlan.setDate(date.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE));
+        dayPlan.setDepotId(depot.getId());
+        dayPlan.setDepotName(depot.getName());
+
+        int depotTotalOrders = 0;
+        int depotTotalBoxes = 0;
+        List<DayPlanRouteDto> routeDtos = new ArrayList<>();
+
+        for (Route route : routes) {
+            List<Order> plannedOrders = orderRepository.findByRouteIdAndRequestedDeliveryDate(route.getId(), date);
+
+            DayPlanRouteDto routeDto = new DayPlanRouteDto();
+            routeDto.setRouteId(route.getId());
+            routeDto.setRouteCode(route.getCode());
+            routeDto.setRouteName(route.getName());
+
+            // Manifest for this route+date (for vehicle/driver/status)
+            Optional<Manifest> manifestOpt = manifestRepository.findByRouteIdAndDate(route.getId(), date);
+            if (manifestOpt.isPresent()) {
+                Manifest manifest = manifestOpt.get();
+                routeDto.setManifestStatus(manifest.getStatus().name());
+                routeDto.setVehicleRegistration(manifest.getVehicle().getRegistration());
+                routeDto.setDriverName(manifest.getDriver().getName());
+            } else {
+                routeDto.setManifestStatus("NONE");
+                routeDto.setVehicleRegistration(null);
+                routeDto.setDriverName(null);
+            }
+
+            int routeTotalBoxes = 0;
+            int fullyReceived = 0;
+            int partiallyReceived = 0;
+            int notYetReceived = 0;
+
+            List<DayPlanOrderDto> orderDtos = new ArrayList<>();
+            for (Order order : plannedOrders) {
+                List<Box> boxes = boxRepository.findByOrderId(order.getId());
+
+                int totalBoxes = boxes.size();
+                int expectedBoxes = (int) boxes.stream()
+                        .filter(b -> b.getStatus() == Box.BoxStatus.EXPECTED).count();
+                int receivedBoxes = (int) boxes.stream()
+                        .filter(b -> b.getStatus() == Box.BoxStatus.RECEIVED).count();
+                int readyBoxes = (int) boxes.stream()
+                        .filter(b -> b.getStatus() == Box.BoxStatus.MANIFESTED
+                                || b.getStatus() == Box.BoxStatus.DELIVERED).count();
+
+                DayPlanOrderDto orderDto = new DayPlanOrderDto();
+                orderDto.setId(order.getId());
+                orderDto.setOrderId(order.getOrderId());
+                orderDto.setCustomerAddress(order.getCustomerAddress() != null ? order.getCustomerAddress() : "");
+                orderDto.setDeliveryPostcode(order.getDeliveryPostcode());
+                orderDto.setOrderStatus(order.getStatus());
+                orderDto.setTotalBoxes(totalBoxes);
+                orderDto.setBoxesExpected(expectedBoxes);
+                orderDto.setBoxesReceived(receivedBoxes);
+                orderDto.setBoxesReady(readyBoxes);
+                orderDtos.add(orderDto);
+
+                routeTotalBoxes += totalBoxes;
+
+                if (expectedBoxes == 0) {
+                    fullyReceived++;
+                } else if (expectedBoxes < totalBoxes) {
+                    partiallyReceived++;
+                } else {
+                    notYetReceived++;
+                }
+            }
+
+            // Sort orders by postcode for consistent presentation
+            orderDtos.sort(java.util.Comparator.comparing(DayPlanOrderDto::getDeliveryPostcode));
+
+            routeDto.setTotalOrders(plannedOrders.size());
+            routeDto.setTotalBoxes(routeTotalBoxes);
+            routeDto.setOrdersFullyReceived(fullyReceived);
+            routeDto.setOrdersPartiallyReceived(partiallyReceived);
+            routeDto.setOrdersNotYetReceived(notYetReceived);
+            routeDto.setOrders(orderDtos);
+
+            depotTotalOrders += plannedOrders.size();
+            depotTotalBoxes += routeTotalBoxes;
+            routeDtos.add(routeDto);
+        }
+
+        dayPlan.setTotalOrdersOnDay(depotTotalOrders);
+        dayPlan.setTotalBoxesOnDay(depotTotalBoxes);
+        dayPlan.setRoutes(routeDtos);
+
+        return dayPlan;
     }
     
     private List<ExceptionDto> getExceptions(String depotId) {

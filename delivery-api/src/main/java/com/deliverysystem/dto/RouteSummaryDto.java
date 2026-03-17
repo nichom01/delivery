@@ -12,10 +12,19 @@ public class RouteSummaryDto {
     private Integer boxesTotal;
     private String status;
     private String progressNote;
-    
+
+    /** Orders scheduled for delivery on the dashboard date (from requestedDeliveryDate) */
+    private Integer plannedOrders;
+    /** Total boxes across all planned orders (all statuses) */
+    private Integer plannedBoxes;
+    /** Planned orders where at least one box is still EXPECTED */
+    private Integer awaitingGoodsOrders;
+    /** Count of EXPECTED boxes across all planned orders */
+    private Integer awaitingGoodsBoxes;
+
     public RouteSummaryDto() {
     }
-    
+
     public RouteSummaryDto(String routeId, String routeName, String description, String vehicle, String driver, Integer deliveriesDone, Integer deliveriesTotal, Integer boxesDone, Integer boxesTotal, String status, String progressNote) {
         this.routeId = routeId;
         this.routeName = routeName;
@@ -113,8 +122,40 @@ public class RouteSummaryDto {
     public String getProgressNote() {
         return progressNote;
     }
-    
+
     public void setProgressNote(String progressNote) {
         this.progressNote = progressNote;
+    }
+
+    public Integer getPlannedOrders() {
+        return plannedOrders;
+    }
+
+    public void setPlannedOrders(Integer plannedOrders) {
+        this.plannedOrders = plannedOrders;
+    }
+
+    public Integer getPlannedBoxes() {
+        return plannedBoxes;
+    }
+
+    public void setPlannedBoxes(Integer plannedBoxes) {
+        this.plannedBoxes = plannedBoxes;
+    }
+
+    public Integer getAwaitingGoodsOrders() {
+        return awaitingGoodsOrders;
+    }
+
+    public void setAwaitingGoodsOrders(Integer awaitingGoodsOrders) {
+        this.awaitingGoodsOrders = awaitingGoodsOrders;
+    }
+
+    public Integer getAwaitingGoodsBoxes() {
+        return awaitingGoodsBoxes;
+    }
+
+    public void setAwaitingGoodsBoxes(Integer awaitingGoodsBoxes) {
+        this.awaitingGoodsBoxes = awaitingGoodsBoxes;
     }
 }

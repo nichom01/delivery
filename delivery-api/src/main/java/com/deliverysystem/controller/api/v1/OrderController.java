@@ -8,6 +8,7 @@ import com.deliverysystem.dto.BoxDto;
 import com.deliverysystem.dto.CreateOrderRequest;
 import com.deliverysystem.dto.FlagExceptionRequest;
 import com.deliverysystem.dto.OrderAwaitingGoodsDto;
+import com.deliverysystem.dto.RerouteOrderRequest;
 import com.deliverysystem.dto.RouteDto;
 import com.deliverysystem.repository.UserRepository;
 import com.deliverysystem.security.JwtTokenProvider;
@@ -136,14 +137,36 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Order>> markReadyForManifest(
             @PathVariable String orderId,
             @RequestHeader("Authorization") String authHeader) {
-        
+
         String token = authHeader.substring(7);
         String username = tokenProvider.getUsernameFromToken(token);
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         Order order = orderService.markReadyForManifest(orderId, user);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Order marked as ready for manifest", order));
+    }
+
+    @PutMapping("/{orderId}/route")
+    public ResponseEntity<ApiResponse<RouteDto>> rerouteOrder(
+            @PathVariable String orderId,
+            @Valid @RequestBody RerouteOrderRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.substring(7);
+        String username = tokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Order order = orderService.rerouteOrder(orderId, request.getRouteId(), request.getReason(), user);
+
+        RouteDto routeDto = new RouteDto();
+        routeDto.setId(order.getRoute().getId());
+        routeDto.setCode(order.getRoute().getCode());
+        routeDto.setName(order.getRoute().getName());
+        routeDto.setDepotId(order.getRoute().getDepot().getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Order re-routed successfully", routeDto));
     }
 }

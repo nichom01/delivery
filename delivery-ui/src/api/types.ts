@@ -79,6 +79,10 @@ export interface RouteSummaryDto {
   boxesTotal: number;
   status: string;
   progressNote?: string;
+  plannedOrders?: number;
+  plannedBoxes?: number;
+  awaitingGoodsOrders?: number;
+  awaitingGoodsBoxes?: number;
 }
 
 export interface ExceptionDto {
@@ -288,4 +292,54 @@ export interface AuditEventDto {
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   entityType: string;
   detail: string;
+}
+
+// Day Plan
+export interface DayPlanOrderDto {
+  id: string;
+  orderId: string;
+  customerAddress: string;
+  deliveryPostcode: string;
+  orderStatus: string;
+  totalBoxes: number;
+  boxesExpected: number;
+  boxesReceived: number;
+  boxesReady: number;
+}
+
+export interface DayPlanRouteDto {
+  routeId: string;
+  routeCode: string;
+  routeName: string;
+  totalOrders: number;
+  totalBoxes: number;
+  ordersFullyReceived: number;
+  ordersPartiallyReceived: number;
+  ordersNotYetReceived: number;
+  manifestStatus: string;
+  vehicleRegistration: string | null;
+  driverName: string | null;
+  orders: DayPlanOrderDto[];
+}
+
+export interface DayPlanDto {
+  date: string;
+  depotId: string;
+  depotName: string;
+  totalOrdersOnDay: number;
+  totalBoxesOnDay: number;
+  routes: DayPlanRouteDto[];
+}
+
+// Reroute
+export interface RerouteOrderRequest {
+  routeId: string;
+  reason: string;
+}
+
+export interface RerouteResultDto {
+  id: string;
+  code: string;
+  name: string;
+  depotId: string;
 }

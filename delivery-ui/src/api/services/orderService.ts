@@ -1,5 +1,5 @@
 import { apiClient } from '../apiClient';
-import type { CreateOrderRequest, RouteDto, OrderAwaitingGoodsDto, BoxDto, OrderDto } from '../types';
+import type { CreateOrderRequest, RouteDto, OrderAwaitingGoodsDto, BoxDto, OrderDto, RerouteOrderRequest, RerouteResultDto } from '../types';
 
 export const orderService = {
   createOrder: async (request: CreateOrderRequest): Promise<RouteDto> => {
@@ -49,11 +49,21 @@ export const orderService = {
   
   markReadyForManifest: async (orderId: string): Promise<OrderDto> => {
     const response = await apiClient.post<OrderDto>(`/orders/${orderId}/ready-for-manifest`);
-    
+
     if (!response.success) {
       throw new Error(response.message || 'Failed to mark order as ready for manifest');
     }
-    
+
     return response.data;
-  }
+  },
+
+  rerouteOrder: async (orderId: string, request: RerouteOrderRequest): Promise<RerouteResultDto> => {
+    const response = await apiClient.put<RerouteResultDto>(`/orders/${orderId}/route`, request);
+
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to re-route order');
+    }
+
+    return response.data;
+  },
 };

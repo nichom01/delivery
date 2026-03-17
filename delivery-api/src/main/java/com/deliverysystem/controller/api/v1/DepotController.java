@@ -4,6 +4,7 @@ import com.deliverysystem.domain.Depot;
 import com.deliverysystem.domain.User;
 import com.deliverysystem.dto.ApiResponse;
 import com.deliverysystem.dto.CreateDepotRequest;
+import com.deliverysystem.dto.DayPlanDto;
 import com.deliverysystem.dto.DepotDto;
 import com.deliverysystem.dto.UpdateDepotRequest;
 import com.deliverysystem.repository.DepotRepository;
@@ -13,19 +14,24 @@ import com.deliverysystem.repository.UserRepository;
 import com.deliverysystem.repository.VehicleRepository;
 import com.deliverysystem.security.JwtTokenProvider;
 import com.deliverysystem.service.AuditService;
+import com.deliverysystem.service.DashboardService;
 import com.deliverysystem.service.DepotService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/depots")
 public class DepotController {
-    
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+
     private final DepotRepository depotRepository;
     private final RouteRepository routeRepository;
     private final VehicleRepository vehicleRepository;
@@ -34,8 +40,9 @@ public class DepotController {
     private final JwtTokenProvider tokenProvider;
     private final AuditService auditService;
     private final DepotService depotService;
-    
-    public DepotController(DepotRepository depotRepository, RouteRepository routeRepository, VehicleRepository vehicleRepository, DriverRepository driverRepository, UserRepository userRepository, JwtTokenProvider tokenProvider, AuditService auditService, DepotService depotService) {
+    private final DashboardService dashboardService;
+
+    public DepotController(DepotRepository depotRepository, RouteRepository routeRepository, VehicleRepository vehicleRepository, DriverRepository driverRepository, UserRepository userRepository, JwtTokenProvider tokenProvider, AuditService auditService, DepotService depotService, DashboardService dashboardService) {
         this.depotRepository = depotRepository;
         this.routeRepository = routeRepository;
         this.vehicleRepository = vehicleRepository;
@@ -44,6 +51,7 @@ public class DepotController {
         this.tokenProvider = tokenProvider;
         this.auditService = auditService;
         this.depotService = depotService;
+        this.dashboardService = dashboardService;
     }
     
     @GetMapping
@@ -85,6 +93,16 @@ public class DepotController {
         return ResponseEntity.ok(ApiResponse.success(routeDtos));
     }
     
+    @GetMapping("/{id}/day-plan")
+    public ResponseEntity<ApiResponse<DayPlanDto>> getDayPlan(
+            @PathVariable String id,
+            @RequestParam(required = false) String date) {
+
+        LocalDate localDate = date != null ? LocalDate.parse(date, DATE_FORMATTER) : LocalDate.now();
+        DayPlanDto dayPlan = dashboardService.getDayPlan(id, localDate);
+        return ResponseEntity.ok(ApiResponse.success(dayPlan));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<DepotDto>> createDepot(
             @Valid @RequestBody CreateDepotRequest request,

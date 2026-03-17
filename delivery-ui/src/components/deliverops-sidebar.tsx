@@ -3,6 +3,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import {
   LayoutDashboard,
+  CalendarDays,
   Package,
   Search,
   FileText,
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 
 const depotMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', scope: 'depot' },
+  { icon: CalendarDays, label: 'Day Plan', path: '/day-plan', scope: 'depot' },
   { icon: Package, label: 'Order Entry', path: '/orders/new', scope: 'depot' },
   { icon: Search, label: 'Goods Receiving', path: '/receiving', scope: 'depot' },
   { icon: FileText, label: 'Manifests', path: '/manifests', scope: 'depot' },

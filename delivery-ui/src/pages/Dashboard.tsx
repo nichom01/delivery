@@ -151,6 +151,12 @@ export default function Dashboard() {
                     <th className="text-left text-[10.5px] font-bold text-gray-500 uppercase tracking-wide px-3.5 py-2 border-b-2 border-gray-100 bg-gray-50 whitespace-nowrap">
                       Boxes
                     </th>
+                    <th className="text-left text-[10.5px] font-bold text-gray-500 uppercase tracking-wide px-3.5 py-2 border-b-2 border-gray-100 bg-gray-50 whitespace-nowrap">
+                      Planned
+                    </th>
+                    <th className="text-left text-[10.5px] font-bold text-gray-500 uppercase tracking-wide px-3.5 py-2 border-b-2 border-gray-100 bg-gray-50 whitespace-nowrap">
+                      Goods In
+                    </th>
                     <th className="text-left text-[10.5px] font-bold text-gray-500 uppercase tracking-wide px-3.5 py-2 border-b-2 border-gray-100 bg-gray-50 whitespace-nowrap min-w-[140px]">
                       Delivery %
                     </th>
@@ -196,6 +202,31 @@ export default function Dashboard() {
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100 text-[12.5px] text-gray-700 align-middle">
                           {route.boxesDone} / {route.boxesTotal}
+                        </td>
+                        <td className="px-3.5 py-2 border-b border-gray-100 align-middle">
+                          {route.plannedOrders != null ? (
+                            <div className="text-[12.5px] text-gray-700">
+                              <span className="font-semibold">{route.plannedOrders}</span>
+                              <span className="text-gray-400 text-[11px]"> orders</span>
+                              <br />
+                              <span className="text-[11px] text-gray-500">{route.plannedBoxes} boxes</span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-3.5 py-2 border-b border-gray-100 align-middle">
+                          {route.awaitingGoodsOrders != null && route.awaitingGoodsOrders > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800 whitespace-nowrap">
+                              ⏳ {route.awaitingGoodsOrders} orders
+                            </span>
+                          ) : route.plannedOrders != null && route.plannedOrders > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-800 whitespace-nowrap">
+                              ✓ All in
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="px-3.5 py-2 border-b border-gray-100 align-middle">
                           <ProgressBar percentage={delPct} color={statusColor === 'green' ? 'green' : statusColor === 'amber' ? 'amber' : 'blue'} />

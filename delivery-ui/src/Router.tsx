@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { DeliverOpsLayout } from './components/deliverops-layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import DayPlan from './pages/DayPlan';
 import RouteDrilldown from './pages/RouteDrilldown';
 import OrderEntry from './pages/OrderEntry';
 import GoodsReceiving from './pages/GoodsReceiving';
@@ -38,6 +39,7 @@ export default function Router() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="dashboard/routes/:routeId" element={<RouteDrilldown />} />
+        <Route path="day-plan" element={<DayPlan />} />
         <Route path="orders/new" element={<OrderEntry />} />
         <Route path="receiving" element={<GoodsReceiving />} />
         <Route path="manifests" element={<ManifestBuilder />} />

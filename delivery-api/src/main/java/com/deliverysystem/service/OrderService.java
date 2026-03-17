@@ -7,6 +7,7 @@ import com.deliverysystem.domain.User;
 import com.deliverysystem.dto.CreateOrderRequest;
 import com.deliverysystem.repository.BoxRepository;
 import com.deliverysystem.repository.OrderRepository;
+import com.deliverysystem.repository.RouteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,16 +21,18 @@ import java.util.Optional;
 
 @Service
 public class OrderService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
     private final BoxRepository boxRepository;
+    private final RouteRepository routeRepository;
     private final PostcodeRoutingService postcodeRoutingService;
     private final AuditService auditService;
-    
-    public OrderService(OrderRepository orderRepository, BoxRepository boxRepository, PostcodeRoutingService postcodeRoutingService, AuditService auditService) {
+
+    public OrderService(OrderRepository orderRepository, BoxRepository boxRepository, RouteRepository routeRepository, PostcodeRoutingService postcodeRoutingService, AuditService auditService) {
         this.orderRepository = orderRepository;
         this.boxRepository = boxRepository;
+        this.routeRepository = routeRepository;
         this.postcodeRoutingService = postcodeRoutingService;
         this.auditService = auditService;
     }
@@ -158,18 +161,63 @@ public class OrderService {
     public Order markReadyForManifest(String orderId, User user) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
-        
+
         String previousStatus = order.getStatus();
         order.setStatus("READY_FOR_MANIFEST");
         order = orderRepository.save(order);
-        
+
         // Audit
         String depotId = order.getRoute() != null && order.getRoute().getDepot() != null ?
             order.getRoute().getDepot().getId() : null;
         auditService.logUpdate(user, "Order", order.getId(), depotId, previousStatus, "READY_FOR_MANIFEST");
-        
+
         log.info("Order {} marked as ready for manifest", orderId);
-        
+
+        return order;
+    }
+
+    @Transactional
+    public Order rerouteOrder(String orderId, String newRouteId, String reason, User user) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+
+        // Reject if any box is already manifested — remove from manifest first
+        List<Box> boxes = boxRepository.findByOrderId(order.getId());
+        boolean hasActiveManifestBox = boxes.stream()
+                .anyMatch(b -> b.getStatus() == Box.BoxStatus.MANIFESTED);
+        if (hasActiveManifestBox) {
+            throw new IllegalStateException(
+                    "Order " + order.getOrderId() + " has boxes on an active manifest. " +
+                    "Remove the order from its manifest before re-routing.");
+        }
+
+        Route newRoute = routeRepository.findById(newRouteId)
+                .orElseThrow(() -> new IllegalArgumentException("Route not found: " + newRouteId));
+
+        // Reject cross-depot moves
+        Route currentRoute = order.getRoute();
+        if (currentRoute != null && currentRoute.getDepot() != null && newRoute.getDepot() != null) {
+            if (!currentRoute.getDepot().getId().equals(newRoute.getDepot().getId())) {
+                throw new IllegalArgumentException(
+                        "Cannot move order to a route in a different depot. " +
+                        "Current depot: " + currentRoute.getDepot().getName() +
+                        ", target depot: " + newRoute.getDepot().getName());
+            }
+        }
+
+        String previousRouteName = currentRoute != null ? currentRoute.getName() : "unassigned";
+        String depotId = newRoute.getDepot() != null ? newRoute.getDepot().getId() : null;
+
+        order.setRoute(newRoute);
+        order = orderRepository.save(order);
+
+        auditService.logUpdate(user, "Order", order.getId(), depotId,
+                "Route: " + previousRouteName,
+                "Route: " + newRoute.getName() + ". Reason: " + reason);
+
+        log.info("Order {} re-routed from '{}' to '{}'. Reason: {}",
+                order.getOrderId(), previousRouteName, newRoute.getName(), reason);
+
         return order;
     }
 }
