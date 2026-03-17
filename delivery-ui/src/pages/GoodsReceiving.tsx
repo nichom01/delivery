@@ -81,29 +81,33 @@ export default function GoodsReceiving() {
       setError('Please provide a reason for the exception');
       return;
     }
-    
+
+    const orderObj = orders.find(o => o.orderId === selectedOrder);
+    if (!orderObj) return;
+
     try {
       setError(null);
-      await orderService.flagException(selectedOrder, exceptionReason.trim());
+      await orderService.flagException(orderObj.id, exceptionReason.trim());
       setSuccessMessage(`Exception flagged for order ${selectedOrder}`);
       setShowExceptionDialog(false);
       setExceptionReason('');
-      // Reload orders
       const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId);
       setOrders(updatedOrders);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to flag exception');
     }
   };
-  
+
   const handleReadyForManifest = async () => {
     if (!selectedOrder) return;
-    
+
+    const orderObj = orders.find(o => o.orderId === selectedOrder);
+    if (!orderObj) return;
+
     try {
       setError(null);
-      await orderService.markReadyForManifest(selectedOrder);
+      await orderService.markReadyForManifest(orderObj.id);
       setSuccessMessage(`Order ${selectedOrder} marked as ready for manifest`);
-      // Reload orders
       const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId);
       setOrders(updatedOrders);
     } catch (err) {

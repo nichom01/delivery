@@ -3,29 +3,29 @@ package com.deliverysystem.dto;
 import java.util.List;
 
 public class OrderAwaitingGoodsDto {
+    private String id;
     private String orderId;
     private String customer;
     private String routeName;
     private Integer boxesReceived;
     private Integer boxesExpected;
     private List<BoxDto> boxes;
-    
+
     public OrderAwaitingGoodsDto() {
     }
-    
-    public OrderAwaitingGoodsDto(String orderId, String customer, String routeName, Integer boxesReceived, Integer boxesExpected, List<BoxDto> boxes) {
-        this.orderId = orderId;
-        this.customer = customer;
-        this.routeName = routeName;
-        this.boxesReceived = boxesReceived;
-        this.boxesExpected = boxesExpected;
-        this.boxes = boxes;
+
+    public String getId() {
+        return id;
     }
-    
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getOrderId() {
         return orderId;
     }
-    
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }

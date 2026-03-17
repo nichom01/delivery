@@ -415,6 +415,7 @@ public class DashboardService {
             
             if (expectedCount > 0 || receivedCount < boxes.size()) {
                 OrderAwaitingGoodsDto dto = new OrderAwaitingGoodsDto();
+                dto.setId(order.getId());
                 dto.setOrderId(order.getOrderId());
                 dto.setCustomer(order.getCustomerAddress() != null ? order.getCustomerAddress() : "Unknown");
                 dto.setRouteName(order.getRoute() != null ? order.getRoute().getName() : "-");

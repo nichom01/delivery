@@ -147,6 +147,7 @@ export interface BoxDto {
 }
 
 export interface OrderAwaitingGoodsDto {
+  id: string;
   orderId: string;
   customer: string;
   routeName: string;
