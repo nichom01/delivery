@@ -87,7 +87,7 @@ public class PostcodeRuleController {
             .orElseThrow(() -> new IllegalArgumentException("Route not found: " + request.getRouteId()));
         
         PostcodeRule rule = new PostcodeRule();
-        rule.setPattern(request.getPattern());
+        rule.setPattern(request.getPattern().replaceAll("\\s+", "").toUpperCase());
         rule.setLevel(PostcodeRule.PostcodeLevel.valueOf(request.getLevel().toUpperCase()));
         rule.setRoute(route);
         rule.setEffectiveFrom(LocalDate.parse(request.getEffectiveFrom(), DATE_FORMATTER));
@@ -161,7 +161,7 @@ public class PostcodeRuleController {
         
         // Update pattern if provided
         if (request.getPattern() != null && !request.getPattern().isEmpty()) {
-            rule.setPattern(request.getPattern().trim().toUpperCase());
+            rule.setPattern(request.getPattern().replaceAll("\\s+", "").toUpperCase());
         }
         
         // Update level if provided
