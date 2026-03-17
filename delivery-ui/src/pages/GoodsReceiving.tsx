@@ -31,7 +31,7 @@ export default function GoodsReceiving() {
       try {
         setLoading(true);
         setError(null);
-        const data = await orderService.getOrdersAwaitingGoods(selectedDepotId);
+        const data = await orderService.getOrdersAwaitingGoods(selectedDepotId ?? undefined);
         setOrders(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load orders');
@@ -61,7 +61,7 @@ export default function GoodsReceiving() {
         setLastCheckedBox({ boxId: box.id, orderId: order.orderId });
         setSuccessMessage(`Box ${box.id} checked in successfully for order ${order.orderId}`);
         // Reload orders to get updated status
-        const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId);
+        const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId ?? undefined);
         setOrders(updatedOrders);
         setBoxId('');
       } else {
@@ -91,7 +91,7 @@ export default function GoodsReceiving() {
       setSuccessMessage(`Exception flagged for order ${selectedOrder}`);
       setShowExceptionDialog(false);
       setExceptionReason('');
-      const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId);
+      const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId ?? undefined);
       setOrders(updatedOrders);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to flag exception');
@@ -108,7 +108,7 @@ export default function GoodsReceiving() {
       setError(null);
       await orderService.markReadyForManifest(orderObj.id);
       setSuccessMessage(`Order ${selectedOrder} marked as ready for manifest`);
-      const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId);
+      const updatedOrders = await orderService.getOrdersAwaitingGoods(selectedDepotId ?? undefined);
       setOrders(updatedOrders);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark order as ready for manifest');
@@ -123,7 +123,7 @@ export default function GoodsReceiving() {
     return <div className="flex items-center justify-center min-h-screen text-red-600">{error}</div>;
   }
   
-  const depot = getDepotById(selectedDepotId);
+  const depot = selectedDepotId ? getDepotById(selectedDepotId) : undefined;
   const order = selectedOrder ? orders.find(o => o.orderId === selectedOrder) : orders[0];
   const awaitingCount = orders.filter(o => o.boxesReceived < o.boxesExpected).length;
   

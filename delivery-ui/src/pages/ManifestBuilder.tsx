@@ -43,7 +43,7 @@ export default function ManifestBuilder() {
         setLoading(true);
         setError(null);
         const [manifestsData, routesData, vehiclesData, driversData] = await Promise.all([
-          manifestService.getManifests(selectedDepotId),
+          manifestService.getManifests(selectedDepotId ?? undefined),
           depotService.getRoutesByDepot(selectedDepotId),
           vehicleService.getVehicles(selectedDepotId),
           driverService.getDrivers(selectedDepotId)
@@ -152,7 +152,7 @@ export default function ManifestBuilder() {
         setSuccessMessage('Manifest created successfully');
         // Reload manifests then navigate to the new manifest URL so the page
         // binds to it correctly and Confirm becomes active
-        const updatedManifests = await manifestService.getManifests(selectedDepotId);
+        const updatedManifests = await manifestService.getManifests(selectedDepotId ?? undefined);
         setManifests(updatedManifests);
         navigate(`/manifests/${newManifest.id}`, { replace: true });
       } catch (err) {
@@ -177,7 +177,7 @@ export default function ManifestBuilder() {
         await manifestService.updateManifest(manifest.id, updateRequest);
         setSuccessMessage('Manifest draft saved successfully');
         // Reload manifests
-        const updatedManifests = await manifestService.getManifests(selectedDepotId);
+        const updatedManifests = await manifestService.getManifests(selectedDepotId ?? undefined);
         setManifests(updatedManifests);
       } else {
         setSuccessMessage('No changes to save');
@@ -212,7 +212,7 @@ export default function ManifestBuilder() {
       setSuccessMessage('Manifest confirmed successfully');
       
       // Reload manifests
-      const updatedManifests = await manifestService.getManifests(selectedDepotId);
+      const updatedManifests = await manifestService.getManifests(selectedDepotId ?? undefined);
       setManifests(updatedManifests);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to confirm manifest');
@@ -234,7 +234,7 @@ export default function ManifestBuilder() {
       await manifestService.removeStopFromManifest(manifest.id, orderId);
       setSuccessMessage(`Order ${orderId} removed from manifest`);
       // Reload manifests
-      const updatedManifests = await manifestService.getManifests(selectedDepotId);
+      const updatedManifests = await manifestService.getManifests(selectedDepotId ?? undefined);
       setManifests(updatedManifests);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove stop');

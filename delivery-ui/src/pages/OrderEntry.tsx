@@ -26,7 +26,7 @@ export default function OrderEntry() {
   const [lookup, setLookup] = useState<PostcodeLookupDto | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   
-  const depot = getDepotById(selectedDepotId);
+  const depot = selectedDepotId ? getDepotById(selectedDepotId) : undefined;
   
   useEffect(() => {
     if (postcode && postcode.length >= 3) {
