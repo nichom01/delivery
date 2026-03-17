@@ -26,7 +26,7 @@ public interface PostcodeRuleRepository extends JpaRepository<PostcodeRule, Stri
     
     @Query("SELECT pr FROM PostcodeRule pr WHERE " +
            "(:date BETWEEN pr.effectiveFrom AND COALESCE(pr.effectiveTo, :date)) " +
-           "AND (:pattern LIKE CONCAT(pr.pattern, '%') OR pr.pattern LIKE CONCAT(:pattern, '%')) " +
+           "AND :pattern LIKE CONCAT(pr.pattern, '%') " +
            "ORDER BY CASE pr.level " +
            "WHEN 'FULL' THEN 1 " +
            "WHEN 'SECTOR' THEN 2 " +
