@@ -17,6 +17,10 @@ jobs:
     name: API Tests
     runs-on: ubuntu-latest
 
+    permissions:
+      checks: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v6
 
@@ -32,7 +36,7 @@ jobs:
         run: mvn test -B -q
         # -B = batch/non-interactive, -q = quiet (errors still shown)
 
-      - name: Publish test results
+      - name: Upload test result artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
@@ -40,10 +44,21 @@ jobs:
           path: delivery-api/target/surefire-reports/*.xml
           retention-days: 7
 
+      - name: Publish test summary
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: delivery-api/target/surefire-reports/*.xml
+          check_name: API Test Results
+
   # ── Frontend: lint + unit tests + build check ─────────────────────────────
   test-ui:
     name: UI Tests
     runs-on: ubuntu-latest
+
+    permissions:
+      checks: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v6
@@ -65,20 +80,27 @@ jobs:
 
       - name: Run tests
         working-directory: delivery-ui
-        run: npm run test:run
+        run: npx vitest run --reporter=default --reporter=junit --outputFile=test-results/results.xml
 
       - name: Build (type-check + bundle)
         working-directory: delivery-ui
         run: npm run build
 
-      - name: Publish test results
+      - name: Upload test result artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: ui-test-results
-          path: delivery-ui/test-results/**
+          path: delivery-ui/test-results/results.xml
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Publish test summary
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: delivery-ui/test-results/results.xml
+          check_name: UI Test Results
 
   # ── Build & push Docker images to GHCR ────────────────────────────────────
   # Runs only on pushes to main (not on pull requests)
