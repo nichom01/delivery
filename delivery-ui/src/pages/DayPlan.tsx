@@ -342,6 +342,7 @@ export default function DayPlan() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadDayPlan(); }, [selectedDepotId, selectedDate]);
 
   const depot = getDepotById(selectedDepotId ?? '');

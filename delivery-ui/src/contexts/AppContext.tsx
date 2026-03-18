@@ -135,6 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // No user, just set loading to false
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
   const getDepotById = (id: string): DepotDto | undefined => {
@@ -181,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const context = useContext(AppContext);
   if (context === undefined) {

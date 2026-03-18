@@ -61,6 +61,7 @@ export default function PostcodeRules() {
     };
 
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDepotId]);
 
   const handleTest = async () => {

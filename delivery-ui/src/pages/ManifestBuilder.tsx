@@ -96,7 +96,7 @@ export default function ManifestBuilder() {
         setDate(new Date().toISOString().split('T')[0]);
       }
     }
-  }, [manifest, routes, routeIdFromUrl]);
+  }, [manifest, routes, routeIdFromUrl, date, routeId]);
   
   // When arriving via ?routeId= (no manifestId in URL), redirect to the existing
   // draft manifest for that route so the page binds correctly
@@ -109,7 +109,7 @@ export default function ManifestBuilder() {
         navigate(`/manifests/${existingDraft.id}`, { replace: true });
       }
     }
-  }, [manifests, manifestId, routeIdFromUrl]);
+  }, [manifests, manifestId, routeIdFromUrl, navigate]);
 
   // Fetch route stops when routeId is selected but no manifest exists
   useEffect(() => {

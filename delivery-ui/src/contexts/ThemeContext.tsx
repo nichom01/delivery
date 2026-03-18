@@ -5,6 +5,7 @@ type ThemeType = {
     setTheme: (theme: string) => void
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ThemeContext = createContext<ThemeType | null>(null)
 
 export function ThemeProvider({
@@ -52,6 +53,7 @@ export function ThemeProvider({
     )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeType {
     const context = use(ThemeContext)
 
