@@ -2,6 +2,40 @@
 
 A comprehensive delivery management platform designed to support end-to-end operations of goods delivery via delivery vans across a multi-depot network. The system manages the full delivery lifecycle from order receipt through to proof of delivery.
 
+## Screenshots
+
+The **DeliverOps** web UI (React) supports depot operations from the dashboard through manifests. Images below are stored in [`docs/`](docs/).
+
+### Depot dashboard
+
+Route summary, KPIs, and quick links to manifest routes for the selected working depot.
+
+![Depot dashboard with route summary and KPI cards](docs/Screenshot%202026-03-23%20at%2010.41.29.png)
+
+### Manual order entry
+
+Create orders with live postcode-based route allocation preview.
+
+![Manual order entry with route allocation preview](docs/Screenshot%202026-03-23%20at%2010.41.51.png)
+
+### Goods receiving
+
+Check in boxes against orders awaiting goods at the depot.
+
+![Goods receiving — check in a box](docs/Screenshot%202026-03-23%20at%2010.42.11.png)
+
+### Manifest builder
+
+Build and confirm manifests for a route, driver, and vehicle on a given date.
+
+![Manifest builder for a route in draft status](docs/Screenshot%202026-03-23%20at%2010.42.26.png)
+
+### GitHub
+
+The **delivery** repository (Java API + React UI) alongside related projects.
+
+![GitHub profile showing the delivery repository](docs/Screenshot%202026-03-23%20at%2010.41.12.png)
+
 ## Overview
 
 The Delivery Van Management System is a full-stack application that provides:
