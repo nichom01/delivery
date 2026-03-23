@@ -346,10 +346,10 @@ class OrderApiIntegrationTest extends BaseIntegrationTest {
         
         String fakeBoxId = "box-123";
         
-        // Spring Security returns 403 Forbidden when authentication is missing
         mockMvc.perform(post("/api/v1/orders/boxes/{boxId}/receive", fakeBoxId)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
         
         System.out.println("✓ Correctly requires authentication");
     }
