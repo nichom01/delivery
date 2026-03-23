@@ -168,6 +168,15 @@ Request body:
 
 Success response (`200`): `ApiResponse` with `data.savedCount` equal to the number of rows persisted. Each row stores `user_id` from the JWT, client `recordedAt`, and server `received_at`.
 
+- `GET /api/v1/driver-locations` - List GPS samples for a **driver app user** (JWT; depot managers may query drivers in their depot, central admins may query any driver, drivers may query only themselves)
+
+Query parameters:
+
+- `userId` (required): ID of the target user; must be a user with role `DRIVER`.
+- `date` (optional): calendar day as `YYYY-MM-DD`. If omitted, defaults to the current **UTC** date. Samples are those with `recorded_at` in `[date 00:00:00 UTC, next day 00:00:00 UTC)`.
+
+Response (`200`): `ApiResponse` with `data` as an array of `{ id, latitude, longitude, recordedAt, receivedAt }` ordered by `recordedAt` ascending.
+
 ### Manifests
 
 - `GET /api/v1/manifests` - List manifests (optional depotId and date filters)

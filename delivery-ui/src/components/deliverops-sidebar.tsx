@@ -8,6 +8,7 @@ import {
   Search,
   FileText,
   Map,
+  MapPin,
   Mail,
   Truck,
   User,
@@ -28,6 +29,7 @@ const depotMenuItems = [
   { icon: Mail, label: 'Postcode Rules', path: '/depot/postcodes', scope: 'depot' },
   { icon: Truck, label: 'Vehicles', path: '/depot/vehicles', scope: 'depot' },
   { icon: User, label: 'Drivers', path: '/depot/drivers', scope: 'depot' },
+  { icon: MapPin, label: 'Driver locations', path: '/depot/driver-locations', scope: 'depot' },
 ];
 
 const systemMenuItems = [
