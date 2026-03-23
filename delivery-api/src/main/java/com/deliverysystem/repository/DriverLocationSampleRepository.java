@@ -12,4 +12,9 @@ public interface DriverLocationSampleRepository extends JpaRepository<DriverLoca
         String userId,
         Instant startInclusive,
         Instant endExclusive);
+
+    long countByUser_IdAndRecordedAtGreaterThanEqualAndRecordedAtLessThan(
+        String userId,
+        Instant startInclusive,
+        Instant endExclusive);
 }

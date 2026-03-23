@@ -16,11 +16,15 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class DataSeeder {
@@ -31,6 +35,7 @@ public class DataSeeder {
     private boolean seedEnabled;
     
     @Bean
+    @org.springframework.core.annotation.Order(1)
     public CommandLineRunner seedData(
             DepotRepository depotRepository,
             RouteRepository routeRepository,
@@ -81,7 +86,61 @@ public class DataSeeder {
             });
         };
     }
-    
+
+    /**
+     * Inserts a small polyline of GPS samples for {@code driver1} on the current UTC calendar day when none
+     * exist yet, so the driver-locations dashboard has demo data without calling the mobile ingest API.
+     * Runs even when the main seed is skipped (existing database).
+     */
+    @Bean
+    @org.springframework.core.annotation.Order(2)
+    public CommandLineRunner seedDriverLocationDemoForToday(
+            @Value("${application.seed.enabled:true}") boolean seedEnabled,
+            UserRepository userRepository,
+            DriverLocationSampleRepository driverLocationSampleRepository) {
+        return args -> {
+            if (!seedEnabled) {
+                return;
+            }
+            Optional<User> driverOpt = userRepository.findByUsername("driver1");
+            if (driverOpt.isEmpty()) {
+                return;
+            }
+            User driver = driverOpt.get();
+            LocalDate todayUtc = LocalDate.now(ZoneOffset.UTC);
+            Instant dayStart = todayUtc.atStartOfDay(ZoneOffset.UTC).toInstant();
+            Instant dayEnd = todayUtc.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
+            if (driverLocationSampleRepository.countByUser_IdAndRecordedAtGreaterThanEqualAndRecordedAtLessThan(
+                    driver.getId(), dayStart, dayEnd) > 0) {
+                return;
+            }
+
+            // Short path near central London; recordedAt spread across the UTC day for a visible trace + table
+            double[][] latLon = {
+                {51.50740, -0.12780},
+                {51.50785, -0.12835},
+                {51.50825, -0.12895},
+                {51.50870, -0.12955},
+                {51.50910, -0.13015},
+                {51.50955, -0.13075},
+                {51.51000, -0.13135},
+            };
+            Instant received = Instant.now();
+            List<DriverLocationSample> batch = new ArrayList<>(latLon.length);
+            for (int i = 0; i < latLon.length; i++) {
+                DriverLocationSample row = new DriverLocationSample();
+                row.setUser(driver);
+                row.setLatitude(BigDecimal.valueOf(latLon[i][0]));
+                row.setLongitude(BigDecimal.valueOf(latLon[i][1]));
+                row.setRecordedAt(dayStart.plus(8, ChronoUnit.HOURS).plus(i * 75L, ChronoUnit.MINUTES));
+                row.setReceivedAt(received);
+                batch.add(row);
+            }
+            driverLocationSampleRepository.saveAll(batch);
+            log.info("Seeded {} demo driver location samples for driver1 on {} (UTC)", batch.size(), todayUtc);
+        };
+    }
+
     private void seedAllData(
             DepotRepository depotRepository,
             RouteRepository routeRepository,
