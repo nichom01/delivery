@@ -24,9 +24,17 @@ cd "$PROJECT_ROOT"
 "$SCRIPT_DIR/start-backend.sh" &
 BACKEND_PID=$!
 
+# If the backend script exits immediately (e.g. port 8080 in use), fail fast
+sleep 2
+if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    echo "❌ Backend process exited right away. Common cause: port 8080 already in use."
+    echo "   Stop the other Java/Spring process or only run one ./local/start-all.sh session."
+    exit 1
+fi
+
 # Wait for backend to start
 echo "⏳ Waiting for backend to start..."
-sleep 10
+sleep 8
 
 # Check if backend is responding
 for i in {1..30}; do

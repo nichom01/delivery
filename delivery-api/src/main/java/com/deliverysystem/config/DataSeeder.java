@@ -97,11 +97,15 @@ public class DataSeeder {
     public CommandLineRunner seedDriverLocationDemoForToday(
             @Value("${application.seed.enabled:true}") boolean seedEnabled,
             UserRepository userRepository,
+            DepotRepository depotRepository,
+            PasswordEncoder passwordEncoder,
             DriverLocationSampleRepository driverLocationSampleRepository) {
         return args -> {
             if (!seedEnabled) {
                 return;
             }
+            // Main seed is skipped when the DB already looks populated; driver1 is still required for demo GPS.
+            ensureSeededDriverAppUser(userRepository, passwordEncoder, depotRepository);
             Optional<User> driverOpt = userRepository.findByUsername("driver1");
             if (driverOpt.isEmpty()) {
                 return;
@@ -139,6 +143,36 @@ public class DataSeeder {
             driverLocationSampleRepository.saveAll(batch);
             log.info("Seeded {} demo driver location samples for driver1 on {} (UTC)", batch.size(), todayUtc);
         };
+    }
+
+    /**
+     * Ensures the demo driver app account {@code driver1} exists (London Central). Used by full seed and by
+     * {@link #seedDriverLocationDemoForToday} when the main seed is skipped so the driver-locations UI has a user to pick.
+     */
+    private void ensureSeededDriverAppUser(
+            UserRepository userRepository, PasswordEncoder passwordEncoder, DepotRepository depotRepository) {
+        if (userRepository.findByUsername("driver1").isPresent()) {
+            return;
+        }
+        Depot london = depotRepository.findById("depot-1")
+            .orElse(depotRepository.findByName("London Central").orElse(null));
+        if (london == null) {
+            log.warn("Cannot seed driver1: London Central depot not found");
+            return;
+        }
+        String defaultPassword = passwordEncoder.encode("password");
+        LocalDateTime now = LocalDateTime.now();
+        User driverUser = new User();
+        driverUser.setUsername("driver1");
+        driverUser.setPassword(defaultPassword);
+        driverUser.setEmail("driver1@deliverysystem.com");
+        driverUser.setName("Alex Driver");
+        driverUser.setRole(User.UserRole.DRIVER);
+        driverUser.setDepotId(london.getId());
+        driverUser.setStatus("ACTIVE");
+        driverUser.setLastLogin(now);
+        userRepository.save(driverUser);
+        log.info("Created driver user: driver1 (London Central)");
     }
 
     private void seedAllData(
@@ -215,23 +249,7 @@ public class DataSeeder {
             }
         }
 
-        if (!userRepository.findByUsername("driver1").isPresent()) {
-            Depot london = depotRepository.findById("depot-1")
-                .orElse(depotRepository.findByName("London Central").orElse(null));
-            if (london != null) {
-                User driverUser = new User();
-                driverUser.setUsername("driver1");
-                driverUser.setPassword(defaultPassword);
-                driverUser.setEmail("driver1@deliverysystem.com");
-                driverUser.setName("Alex Driver");
-                driverUser.setRole(User.UserRole.DRIVER);
-                driverUser.setDepotId(london.getId());
-                driverUser.setStatus("ACTIVE");
-                driverUser.setLastLogin(now);
-                userRepository.save(driverUser);
-                log.info("Created driver user: driver1");
-            }
-        }
+        ensureSeededDriverAppUser(userRepository, passwordEncoder, depotRepository);
         
         log.info("Total users in database: {}", userRepository.count());
     }
@@ -476,8 +494,8 @@ public class DataSeeder {
         LocalDate now = LocalDate.now();
         
         String[][] driverData = {
-            // London (12 drivers)
-            {"J. Patel", "07123456789", "PATEL123456", "2027-06-15"},
+            // London (12 drivers) — first name matches seeded driver app user "driver1" (Alex Driver)
+            {"Alex Driver", "07123456789", "PATEL123456", "2027-06-15"},
             {"R. Ahmed", "07123456790", "AHMED123456", "2027-07-20"},
             {"S. Williams", "07123456791", "WILLI123456", "2027-08-10"},
             {"T. O'Brien", "07123456792", "OBRIE123456", "2027-09-05"},
