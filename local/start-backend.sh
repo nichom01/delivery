@@ -52,6 +52,18 @@ if [ ! -d target ] || [ ! -f target/delivery-api-*.jar ]; then
     mvn clean install -DskipTests
 fi
 
+# Avoid a confusing Maven failure when another API instance already owns 8080
+if command -v lsof >/dev/null 2>&1; then
+    if lsof -iTCP:8080 -sTCP:LISTEN -n -P >/dev/null 2>&1; then
+        echo "❌ Port 8080 is already in use (another process is listening)."
+        echo "   Stop that process first, e.g.:"
+        echo "     lsof -iTCP:8080 -sTCP:LISTEN -n -P"
+        echo "     kill <PID>"
+        echo "   Or run on another port: SERVER_PORT=8081 mvn spring-boot:run"
+        exit 1
+    fi
+fi
+
 # Start the backend
 echo "🚀 Starting Spring Boot application..."
 echo "   API will be available at: http://localhost:8080"

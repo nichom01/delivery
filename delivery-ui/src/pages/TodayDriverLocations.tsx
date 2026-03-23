@@ -132,7 +132,9 @@ export default function TodayDriverLocations() {
             disabled={driverAppUsers.length === 0}
           >
             {driverAppUsers.length === 0 ? (
-              <option value="">No driver users in depot</option>
+              <option value="">
+                No driver app users in this depot (demo user driver1 is London Central only)
+              </option>
             ) : (
               driverAppUsers.map((u) => (
                 <option key={u.id} value={u.id}>
