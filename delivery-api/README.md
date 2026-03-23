@@ -144,6 +144,30 @@ The API will be available at `http://localhost:8080`
 
 - `GET /api/v1/drivers` - List drivers (optional depotId filter)
 
+### Driver locations (mobile ingest)
+
+- `POST /api/v1/driver-locations` - Submit one or more GPS samples for the authenticated driver user (JWT only; `ROLE_DRIVER` required)
+
+Request body:
+
+```json
+{
+  "locations": [
+    {
+      "latitude": 51.507351,
+      "longitude": -0.127758,
+      "recordedAt": "2026-03-23T10:42:26Z"
+    }
+  ]
+}
+```
+
+- `locations`: required, non-empty, at most 100 points per request.
+- `latitude` / `longitude`: required; must fall within valid WGS84 ranges.
+- `recordedAt`: required ISO-8601 instant (client time when the point was captured). Server rejects samples more than 30 days in the past or more than 5 minutes in the future (clock skew).
+
+Success response (`200`): `ApiResponse` with `data.savedCount` equal to the number of rows persisted. Each row stores `user_id` from the JWT, client `recordedAt`, and server `received_at`.
+
 ### Manifests
 
 - `GET /api/v1/manifests` - List manifests (optional depotId and date filters)
@@ -167,6 +191,8 @@ The API will be available at `http://localhost:8080`
    ```
    Authorization: Bearer <token>
    ```
+
+Driver-only endpoints (for example `POST /api/v1/driver-locations`) require a user with role `DRIVER`. When seed data is enabled, a sample driver login is `driver1` / `password` (London Central depot).
 
 ### API Key Authentication (External Systems)
 

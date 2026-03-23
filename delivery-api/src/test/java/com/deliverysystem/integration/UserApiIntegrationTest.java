@@ -34,7 +34,8 @@ class UserApiIntegrationTest extends BaseIntegrationTest {
         System.out.println("\n=== Test: Get all users without auth ===");
         
         MvcResult result = mockMvc.perform(get("/api/v1/users"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
                 .andReturn();
         
         System.out.println("✓ Correctly rejected unauthorized request");

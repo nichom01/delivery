@@ -155,6 +155,24 @@ public class DataSeeder {
                 log.info("Created depot manager user: {} for depot: {} (ID: {})", username, depotNames[i], depot.getId());
             }
         }
+
+        if (!userRepository.findByUsername("driver1").isPresent()) {
+            Depot london = depotRepository.findById("depot-1")
+                .orElse(depotRepository.findByName("London Central").orElse(null));
+            if (london != null) {
+                User driverUser = new User();
+                driverUser.setUsername("driver1");
+                driverUser.setPassword(defaultPassword);
+                driverUser.setEmail("driver1@deliverysystem.com");
+                driverUser.setName("Alex Driver");
+                driverUser.setRole(User.UserRole.DRIVER);
+                driverUser.setDepotId(london.getId());
+                driverUser.setStatus("ACTIVE");
+                driverUser.setLastLogin(now);
+                userRepository.save(driverUser);
+                log.info("Created driver user: driver1");
+            }
+        }
         
         log.info("Total users in database: {}", userRepository.count());
     }

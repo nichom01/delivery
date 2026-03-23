@@ -36,7 +36,8 @@ class DepotApiIntegrationTest extends BaseIntegrationTest {
         System.out.println("\n=== Test: Get all depots without auth ===");
         
         MvcResult result = mockMvc.perform(get("/api/v1/depots"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
                 .andReturn();
         
         System.out.println("✓ Correctly rejected unauthorized request");

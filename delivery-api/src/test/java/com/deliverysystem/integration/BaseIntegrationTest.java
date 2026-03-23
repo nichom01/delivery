@@ -89,4 +89,31 @@ public abstract class BaseIntegrationTest {
         
         return token;
     }
+
+    /**
+     * Get authentication token for driver app user ({@code driver1}).
+     */
+    protected String getDriverToken() throws Exception {
+        String loginRequest = """
+            {
+                "username": "driver1",
+                "password": "password"
+            }
+            """;
+
+        var result = mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/auth/login")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content(loginRequest)
+        ).andReturn();
+
+        String response = result.getResponse().getContentAsString();
+        String token = extractToken(response);
+
+        if (token == null) {
+            throw new RuntimeException("Failed to get driver token");
+        }
+
+        return token;
+    }
 }
