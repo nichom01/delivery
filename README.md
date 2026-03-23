@@ -30,12 +30,6 @@ Build and confirm manifests for a route, driver, and vehicle on a given date.
 
 ![Manifest builder for a route in draft status](docs/Screenshot%202026-03-23%20at%2010.42.26.png)
 
-### GitHub
-
-The **delivery** repository (Java API + React UI) alongside related projects.
-
-![GitHub profile showing the delivery repository](docs/Screenshot%202026-03-23%20at%2010.41.12.png)
-
 ## Overview
 
 The Delivery Van Management System is a full-stack application that provides:
