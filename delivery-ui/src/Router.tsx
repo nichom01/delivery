@@ -11,6 +11,7 @@ import RoutesPage from './pages/RoutesPage';
 import PostcodeRules from './pages/PostcodeRules';
 import Vehicles from './pages/Vehicles';
 import Drivers from './pages/Drivers';
+import TodayDriverLocations from './pages/TodayDriverLocations';
 import Depots from './pages/Depots';
 import Users from './pages/Users';
 import AuditLog from './pages/AuditLog';
@@ -48,6 +49,7 @@ export default function Router() {
         <Route path="depot/postcodes" element={<PostcodeRules />} />
         <Route path="depot/vehicles" element={<Vehicles />} />
         <Route path="depot/drivers" element={<Drivers />} />
+        <Route path="depot/driver-locations" element={<TodayDriverLocations />} />
         <Route path="depots" element={<Depots />} />
         <Route path="users" element={<Users />} />
         <Route path="depot/audit" element={<AuditLog />} />

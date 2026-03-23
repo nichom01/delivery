@@ -273,6 +273,15 @@ export interface UpdatePostcodeRuleRequest {
   effectiveTo?: string | null;
 }
 
+// Driver location history (dashboard)
+export interface DriverLocationSampleDto {
+  id: string;
+  latitude: number;
+  longitude: number;
+  recordedAt: string;
+  receivedAt: string;
+}
+
 // Users
 export interface UserDto {
   id: string;
